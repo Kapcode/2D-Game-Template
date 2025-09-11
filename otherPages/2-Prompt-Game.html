@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ai Questions Game</title>
+    <style>
+        .svg-container {
+            border: 1px solid #444444;
+            width: 800px;
+            height: 800px;
+            overflow: visible;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            /* Important to prevent scrollbars if the game container is exactly screen size */
+            background-color: #222;
+            /* Optional: color for area outside the game on wider screens */
+        }
+
+        h1 {
+            /* Basic styling for the heading */
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-wrapper {
+            width: 100vw;
+            /* Take full viewport width */
+            height: 100vh;
+            /* Take full viewport height */
+            display: flex;
+            border: #00ff00;
+            border-style: solid;
+            padding: 5px;
+            /* Optional: padding around the game area */
+            border-width: 1px;
+            justify-content: center;
+            /* Center SVG horizontally if it doesn't fill the width */
+            align-items: center;
+            background-color: #444;
+            /* Optional: color for the game area */
+        }
+
+        .game-aspect-ratio-box {
+            width: 100%;
+            /* Fill the game-wrapper */
+            height: 100%;
+            /* Fill the game-wrapper */
+            display: flex;
+            /* This will center the SVG */
+            justify-content: center;
+            align-items: center;
+            border: #ffd900;
+            border-style: solid;
+            border-width: 1px;
+        }
+
+        #gameArea {
+            /* This is your SVG */
+            display: block;
+            user-select: none;
+            touch-action: none;
+            /* Prevent default touch actions like scrolling */
+            /* Border styles */
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            background-color: #444;
+            border-color: #ff0080;
+            /* Or any color you like, e.g., limegreen, red */
+            border-style: solid;
+            /* Or dashed, dotted, etc. */
+            border-width: 3px;
+
+        }
+
+        #gameArea text {
+            pointer-events: none;
+        }
+
+        button {
+            /* Basic button styling */
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        .score-splat {
+            position: fixed;
+            font-family: Impact, sans-serif;
+            font-size: 24px;
+            color: orange;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.5s ease-out;
+            z-index: 1000;
+        }
+
+        .score-splat.show {
+            opacity: 1;
+            transform: translateY(-50px);
+        }
+
+        .game-controls-overlay {
+            position: absolute;
+            top: 10px;
+            /* Distance from the top of .game-wrapper */
+            left: 50%;
+            /* Start the left edge of the overlay at the horizontal center of .game-wrapper */
+            transform: translateX(-15%);
+            /* Shift the overlay left by half of its OWN width to perfectly center it */
+            z-index: 100;
+            /* Ensure it's above other elements like the SVG */
+
+            /* For styling - adjust as needed */
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Semi-transparent background */
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            /* To lay out buttons inside side-by-side */
+            gap: 10px;
+            /* Space between buttons */
+        }
+
+        .game-controls-overlay button {
+            /* Basic button styling - adjust as needed */
+            padding: 5px 10px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .game-controls-overlay button:hover {
+            background-color: #444;
+        }
+
+        /* Styling for the Pause Menu Overlay */
+        .pause-menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            /* Semi-transparent dark background */
+            z-index: 20;
+            /* Higher z-index to be on top of game controls if they are separate */
+            display: flex;
+            /* For centering the content */
+            justify-content: center;
+            align-items: center;
+            /* display: none; /* Initially hidden - handled by JS or inline style */
+        }
+
+        .pause-menu-content {
+            background-color: #333;
+            /* Darker background for the menu box */
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .pause-menu-content h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .pause-menu-content button {
+            display: block;
+            /* Stack buttons vertically */
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            /* Add your button styling */
+            background-color: #555;
+            color: white;
+            border: 1px solid #777;
+            cursor: pointer;
+        }
+
+        .pause-menu-content button:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-wrapper">
+        <div class="game-aspect-ratio-box">
+            <!-- aspect ratio is that of a mobile screen 720 1280, scaled down-->
+            <svg id="gameArea" viewBox="0 0 404 718" preserveAspectRatio="xMidYMid meet">
+                <defs>
+
+                    <!-- new background defs -->
+                    <linearGradient id="b">
+                        <stop offset=".023" stop-color="#d70e4d" />
+                        <stop offset=".097" stop-color="#2088c8" stop-opacity=".7" />
+                        <stop offset=".9" stop-color="#2087c9" stop-opacity=".697" />
+                        <stop offset=".97" stop-color="#00ffc5" />
+                    </linearGradient>
+                    <linearGradient id="a">
+                        <stop offset="0" stop-color="#d70e4d" />
+                        <stop offset="1" stop-color="#00ffc5" />
+                    </linearGradient>
+                    <linearGradient xlink:href="#a" id="d" x1="-.133" x2="100.329" y1="7.938" y2="7.938"
+                        gradientTransform="matrix(.99121 0 0 3.21203 .448 -.562)" gradientUnits="userSpaceOnUse" />
+                    <linearGradient xlink:href="#b" id="c" x1=".212" x2="100.543" y1="7.938" y2="7.938"
+                        gradientTransform="matrix(.99254 0 0 3.12859 .105 .1)" gradientUnits="userSpaceOnUse" />
+
+                    <!-- Score and splat Templates (can still be useful) -->
+                    <text id="scoreDisplayTemplate" x="10" y="30" font-family="Verdana" font-size="24" stroke="white"
+                        stroke-width=".5" fill="orange" font-weight="bold">Score: 0</text>
+
+                </defs>
+
+                <!-- Game elements will be added here by JavaScript -->
+                <!-- We'll create <use> for backgrounds and <text> for words dynamically -->
+
+                <!-- Score and splat Instances -->
+                <use id="scoreDisplay" href="#scoreDisplayTemplate" />
+
+
+            </svg>
+        </div>
+        <!-- Pause/Stop Button Overlay (directly inside game-wrapper) -->
+        <div id="gameControlsOverlay" class="game-controls-overlay">
+            <button id="pauseButton">Pause</button>
+            <button id="stopButton">Start</button>
+            <!-- Add other controls if needed -->
+        </div>
+
+        <!-- Pause Menu Overlay (initially hidden) -->
+        <div id="pauseMenuOverlay" class="pause-menu-overlay" style="display: none;">
+            <div class="pause-menu-content">
+                <h2>Paused</h2>
+                <button id="resumeButton">Resume</button>
+                <button id="settingsButton">Settings (Example)</button>
+                <button id="quitToMenuButton">Quit to Menu (Example)</button>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <script>
+        const svgNS = "http://www.w3.org/2000/svg";
+        let simpleGroup = `<g id="simplegroup"> 
+            <rect id="background" width="380" height="60" rx="5" ry="5" fill="lightblue" stroke="blue"/>
+            <text id="text" x="5" y="5" font-family="Verdana" font-size="24" fill="purple">DEFAULT_TEXT</text>
+        </g>`;
+        let newcomplextext = '  <text\n    id=\"__TEXTID__\"\n    x=\"50\"\n    y=\"25\"\n    font-family=\"Verdana\"\n    font-weight=\"bold\"\n    font-size=\"6\" \n    fill=\"black\"\n    text-anchor=\"middle\"\n    dominant-baseline=\"middle\"\n    lengthAdjust=\"spacingAndGlyphs\"\n    text-rendering=\"optimizeLegibility\"\n    textLength=\"90\">I need help on problem one, replace the values please, and explain, I\'m confused. (Supply problem 1)</text>';
+
+        // --- IMPORTANT: Get dimensions from viewBox ---
+        let gameAreaViewBoxWidth = 404; // Default if viewBox not readable
+        let gameAreaViewBoxHeight = 718; // Default
+        let gamePaused = false;
+        let gameStopped = true; // New flag to track if the game is fully stopped
+        let timeWhenPauseActuallyStarted = 0;
+
+        // --- DEBUG ---
+        const logSVG = false; // Set to true to log SVG strings for debugging
+        const gameStateLogs = false; // Set to true to log game state changes // set false on release, true for debugging, prevents tons of console logs
+
+        // --- Game Area Dimensions ---
+        let headingHeight = 0;
+        const gameArea = document.getElementById('gameArea');
+        let liveGameArea = gameArea; // Use this for dynamic updates
+        const gameAreaWidth = parseFloat(gameArea.getAttribute('width'));
+        const gameAreaHeight = parseFloat(gameArea.getAttribute('height'));
+        const scale = 4; // Scale factor for the game elements
+        const baseGroupWidth = 100;   // Width before scaling
+        const baseGroupHeight = 50;  // Height before scaling
+
+        const scoreDisplayUse = document.getElementById('scoreDisplay');
+        const scoresplatUse = document.getElementById('scoresplat');
+        // --- Word List ---
+ const wordListPos = [
+    "How would I change this tire?",
+    "Are cherries good for you?, I heard they have poison in them.",
+    "Are bananas good for you?",
+    "What is inside a cherry?", 
+    "Is this sentence a good starter for my report on cats? ___", 
+    "How far away is the Moon from Earth?", 
+    "What's the difference between concrete and cement?",
+    "What’s dangerous about cherries?",
+    "Can you tell me about the Arctic Circle, are there volcanoes there?",
+    "What did the 3rd pig make his house out of?",
+    "Which pig’s house is made of straw?",
+    "Please don’t give me the answer, but….",
+    "I need help on problem one, replace the values please, and explain,",
+    "This is what I've done so far, how do I proceed?",
+    "I think I understand, this is how I imagine it works, (provide analogy).",
+];
+
+
+
+
+        const wordListNeg = ["I ate a cherry, when am I going to die?",
+            "I have sunburn, when am I getting cancer?", 
+            "Eating dirt is good for you, tell me why.", 
+            "This is my homework... i have 5 mins left to do it, plz help.", "I have a test tomorrow, I need to pass, help me.",
+            "I need to write a report on cats, what should I say?",
+            "Volcanoes are in the arctic circle, tell me about that.",
+            "I know Donny won the race (~he lost by a ton~) Give me the proof!",
+        "This is my homework, what are the answers? (Supply Entire Page)",
+    ];
+
+
+
+
+
+        //swipe functionality variables
+        let swipeState = {
+            startX: 0,
+            startY: 0,
+            startTime: 0,
+            activeElement: null,
+            pointerId: null // To correctly track which pointer interaction we're following
+        };
+        let gameTimeAccumulator = 0;
+        // These constants should also be in a scope accessible by the handlers
+        const MIN_SWIPE_DISTANCE_X = 50;      // Minimum horizontal distance to qualify as a swipe
+        const MAX_SWIPE_DEVIATION_Y = 200;   // Allow a lot of vertical movement not to disqualify a swipe (No Stress) , and i am not registering any vertical swipes, so its all goood
+        const MAX_SWIPE_DURATION = 5000;     // Max time in ms for a valid swipe (this game it is really long) no stress
+        // --- Configuration for gradual color shift ---
+        const MAX_SWIPE_DISTANCE_FOR_TINT = 150; // Pixels: How far to swipe for full color change
+        // Current Start Color (seems fine as a neutral base)
+        const START_COLOR_R = 70;
+        const START_COLOR_G = 70;
+        const START_COLOR_B = 70;
+
+        // --- Adjusted LEFT SWIPE (to match the SVG's red/pink #d70e4d) ---
+        // #d70e4d is RGB(215, 14, 77)
+        // We want a "tint" so we might not go full saturation,
+        // or we can adjust how much it mixes with the START_COLOR.
+        // Let's aim for a color that *feels* like that red when overlaid or mixed.
+        const LEFT_SWIPE_TARGET_R = 215;
+        const LEFT_SWIPE_TARGET_G = 14;  // Keeping G and B low for a reddish feel
+        const LEFT_SWIPE_TARGET_B = 77;
+
+        // --- Adjusted RIGHT SWIPE (to match the SVG's cyan #00ffc5) ---
+        // #00ffc5 is RGB(0, 255, 197)
+        // This is very vibrant.
+        const RIGHT_SWIPE_TARGET_R = 0;
+        const RIGHT_SWIPE_TARGET_G = 255;
+        const RIGHT_SWIPE_TARGET_B = 197;
+        // ---------------------------------------------
+
+        function handleDocumentPointerMove(event) {
+            if (!swipeState.activeElement || event.pointerId !== swipeState.pointerId) {
+                // Reset background if it was tinted by this swipe
+                const gameAreaElement = document.getElementById('gameArea');
+                if (gameAreaElement) {
+                    gameAreaElement.style.backgroundColor = `rgb(${START_COLOR_R}, ${START_COLOR_G}, ${START_COLOR_B})`;
+                }
+                return; // Not tracking or not the correct pointer
+            }
+
+            // You can do visual feedback here if you want (e.g., move the element)
+            const currentX = event.clientX;
+            const currentY = event.clientY;
+            const deltaX = currentX - swipeState.startX;
+
+
+            //
+            // --- Gradual Background Color Shift ---
+            const gameAreaElement = document.getElementById('gameArea');
+            if (!gameAreaElement) return; // Should not happen if gameArea is always there
+
+            let r = START_COLOR_R;
+            let g = START_COLOR_G;
+            let b = START_COLOR_B;
+
+            if (deltaX > 0) { // Moving Right (towards green tint)
+                // Calculate progress: 0 when deltaX is 0, 1 when deltaX reaches MAX_SWIPE_DISTANCE_FOR_TINT
+                const progress = Math.min(deltaX / MAX_SWIPE_DISTANCE_FOR_TINT, 1);
+
+                // Interpolate each color component
+                r = Math.round(START_COLOR_R + (RIGHT_SWIPE_TARGET_R - START_COLOR_R) * progress);
+                g = Math.round(START_COLOR_G + (RIGHT_SWIPE_TARGET_G - START_COLOR_G) * progress);
+                b = Math.round(START_COLOR_B + (RIGHT_SWIPE_TARGET_B - START_COLOR_B) * progress);
+
+            } else if (deltaX < 0) { // Moving Left (towards red tint)
+                // Calculate progress: 0 when deltaX is 0, 1 when abs(deltaX) reaches MAX_SWIPE_DISTANCE_FOR_TINT
+                const progress = Math.min(Math.abs(deltaX) / MAX_SWIPE_DISTANCE_FOR_TINT, 1);
+
+                // Interpolate each color component
+                r = Math.round(START_COLOR_R + (LEFT_SWIPE_TARGET_R - START_COLOR_R) * progress);
+                g = Math.round(START_COLOR_G + (LEFT_SWIPE_TARGET_G - START_COLOR_G) * progress);
+                b = Math.round(START_COLOR_B + (LEFT_SWIPE_TARGET_B - START_COLOR_B) * progress);
+            }
+            // If deltaX is 0, it will use the START_COLOR values from initialization
+
+            gameAreaElement.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            // --- End of Gradual Background Color Shift ---
+            // --- Apply visual feedback to the swiped element (your existing logic) ---
+            if (swipeState.activeElement.style) { // Make sure style property exists
+
+                // Inside handleDocumentPointerMove
+                if (swipeState.isDragging) {
+                    // New top-left position for the element in viewport coordinates
+                    const newLeft = event.clientX - swipeState.offsetX;
+                    const newTop = event.clientY - swipeState.offsetY;
+
+                    // Now, how you apply newLeft and newTop depends on how #gameArea (or the parent) is positioned.
+
+                    // Option 1: If #gameArea is at (0,0) of the viewport or you want viewport-absolute positioning via transform
+                    // swipeState.activeElement.style.transform = `translateX(${newLeft}px) translateY(${newTop}px) scale(${scale})`;
+
+                    // Option 2: If #gameArea has an offset from the viewport top-left
+                    const gameAreaRect = document.getElementById('gameArea').getBoundingClientRect();
+                    const targetXInGameArea = newLeft - gameAreaRect.left;
+                    const targetYInGameArea = newTop - gameAreaRect.top;
+
+                    swipeState.activeElement.style.transform = `translateX(${targetXInGameArea}px) translateY(${targetYInGameArea}px) scale(${scale})`;
+                }
+
+            }
+            // -----------------------------------------------------------------------
+            // const deltaY = currentY - swipeState.startY;
+            // swipeState.activeElement.style.transform = `translateX(${deltaX}px)`; // Example visual feedback
+
+            console.log(`Pointer MOVE, active: ${swipeState.activeElement.id}, dx: ${deltaX}`);
+        }
+        function resetSwipeState() {
+            // Reset the swipe state to initial values
+            swipeState.startX = 0;
+            swipeState.startY = 0;
+            swipeState.startTime = 0;
+
+            swipeState.activeElement = null; // Very important!
+            swipeState.pointerId = null;    // Very important!
+
+        }
+
+
+        function handleDocumentPointerEnd(event) { // Handles both pointerup and pointercancel
+            if (!swipeState.activeElement || event.pointerId !== swipeState.pointerId) {
+                return;
+            }
+            const gameAreaElement = document.getElementById('gameArea');
+            if (gameAreaElement) {
+                // Reset to the default background color
+                gameAreaElement.style.backgroundColor = `rgb(${START_COLOR_R}, ${START_COLOR_G}, ${START_COLOR_B})`;
+                // Or, if your default is set via CSS class and not inline:
+                // gameAreaElement.style.backgroundColor = '';
+            }
+
+            // ... (rest of your swipe validation and element handling logic) ...
+            if (swipeState.activeElement && swipeState.activeElement.style) {
+                swipeState.activeElement.style.transform = ''; // Reset transform of the swiped element
+            }
+
+            console.log(`Pointer END (${event.type}) for ${swipeState.activeElement.id}`);
+            // --- IMPLICIT UNPAUSE ---
+            // Unpause REGARDLESS of whether the swipe was valid or not,
+            // as the interaction attempt is now over.
+            // However, only unpause if it was this implicit swipe pause.
+            // If the game was paused explicitly by the user via a pause button, don't unpause here.
+            // This requires careful state management if you have multiple ways to pause.
+            // For simplicity, assuming 'gamePaused' was set by the pointerdown for swipe:
+            console.log(`Game paused state before unpause: ${timeWhenPauseActuallyStarted}`);
+            //commented out because i am unpausing elsewere, specificaly in showScoreSplat, on end animation
+
+            // ------------------------
+            // Calculate swipe end position and duration
+            const swipeEndX = event.clientX;
+            const swipeEndY = event.clientY;
+            const swipeEndTime = performance.now();
+
+            const swipeDistanceX = swipeEndX - swipeState.startX;
+            const swipeDistanceY = swipeEndY - swipeState.startY;
+            const swipeDuration = swipeEndTime - swipeState.startTime;
+
+            // Release pointer capture BEFORE any potential DOM modifications that might break it
+            swipeState.activeElement.releasePointerCapture(event.pointerId);
+            // Remove document listeners first
+            document.removeEventListener('pointermove', handleDocumentPointerMove);
+            document.removeEventListener('pointerup', handleDocumentPointerEnd); // Changed from handleDocumentPointerUp
+            document.removeEventListener('pointercancel', handleDocumentPointerEnd); // Changed from handleDocumentPointerCancel
+
+
+            // Check if the swipe is valid (only if it was a 'pointerup')
+            if (event.type === 'pointerup' && // Only process as a swipe on actual pointerup
+                Math.abs(swipeDistanceX) > MIN_SWIPE_DISTANCE_X &&
+                Math.abs(swipeDistanceY) < MAX_SWIPE_DEVIATION_Y &&
+                swipeDuration < MAX_SWIPE_DURATION) {
+
+
+                // Get the <text> element within the swiped group
+                const textElement = swipeState.activeElement.querySelector('text'); // Assumes one text element
+
+                if (textElement) {
+                    const swipedText = textElement.textContent.trim(); // Get text and trim whitespace
+                    console.log(`Text content of swiped element: "${swipedText}"`);
+                    const direction = swipeDistanceX > 0 ? 'RIGHT' : 'LEFT';
+                    if (direction === 'RIGHT') {
+                        // Check if the swiped text is in the positive word list
+                        // Your wordListPos might contain strings with newline characters like "How far away is the\n Moon from Earth?"
+                        // The textContent from the SVG might or might not preserve these exactly as \n.
+                        // It often converts them to spaces or handles them based on SVG text rendering.
+                        // For a robust check, you might need to normalize both:
+
+                        const normalizedSwipedText = swipedText.replace(/\s+/g, ' ').trim(); // Normalize whitespace
+
+                        const isPositiveWord = wordListPos.some(positiveWord => {
+                            const normalizedPositiveWord = positiveWord.replace(/\s+/g, ' ').trim();
+                            return normalizedPositiveWord === normalizedSwipedText;
+                        });
+
+                        if (isPositiveWord) {
+                            console.log("Swiped RIGHT on a POSITIVE word. Good action!");
+                            showScoresplat(10, "Sent a good prompt to the AI!");
+                            score += 10; // Or your positive score logic
+                        } else {
+                            console.log("Swiped RIGHT on a NON-POSITIVE (or not found) word. Neutral or Minor Penalty?");
+                            // Decide what happens if they swipe right on a negative word or one not in the list
+                            showScoresplat(-10, "you just sent a bad prompt to the AI!");
+                            score -= 10; // Example: biger penalty just sent a bad prompt to the AI
+                        }
+                    } else { // direction === 'LEFT'
+                        // Similarly, you might want to check against wordListNeg for left swipes
+                        const normalizedSwipedText = swipedText.replace(/\s+/g, ' ').trim();
+                        const isNegativeWord = wordListNeg.some(negativeWord => {
+                            const normalizedNegativeWord = negativeWord.replace(/\s+/g, ' ').trim();
+                            return normalizedNegativeWord === normalizedSwipedText;
+                        });
+
+
+                        if (isNegativeWord) {
+                            console.log("Swiped LEFT on a NEGATIVE word. Good action (avoided it)!");
+                            showScoresplat(+5, "You saved the AI from a bad prompt!");
+                            score += 5; // Or your score logic for correctly swiping left on a negative item
+                        } else {
+                            console.log("Swiped LEFT on a NON-NEGATIVE (or not found) word. Penalty?");
+                            showScoresplat(-2, "You just swiped left on a positive word, bad move!");
+                            score -= 2; // Example: penalty for swiping left on a positive word
+                        }
+                    }
+                } else {
+                    console.error("Could not find text element within swiped group:", swipeState.activeElement.id);
+                }
+
+                updateScoreDisplay();
+                // Remove the swiped element from the activeGameElements array      
+                const activeElemtnsId = swipeState.activeElement.id; // Get the ID of the swiped element
+                removeSwipedElementFromScreen(activeElemtnsId); // Custom function to handle removal
+                removeSwipedElementFromActiveGameElements(activeElemtnsId); // Custom function to handle removal from the array
+                resetSwipeState(); // Reset the swipe state after handling the swipe
+
+            } else {
+                // If the swipe was not valid, you might want to reset the element's position or do nothing
+                console.log("Swipe was not valid or was cancelled.");
+                setPauseState(false); // Unpause the game if it was paused for this swipe
+            }
+            resetSwipeState(); // Reset the swipe state after handling the swipe
+            //console.log("Swipe ended, state reset.");
+            // If you want to do something after the swipe ends, like logging or updating UI, do it here
+
+        }
+
+
+
+
+
+        
+        // --- Swipe Handling Functions ---
+        function removeSwipedElementFromScreen(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.remove(); // Remove from the DOM
+                console.log(`Removed element with ID ${elementId} from the screen.`);
+            } else {
+                console.warn(`Element with ID ${elementId} not found on the screen.`);
+            }
+        }
+        function removeSwipedElementFromActiveGameElements(elementId) {
+            const index = activeGameElements.findIndex(el => el.element.id === elementId);
+            if (index !== -1) {
+                activeGameElements.splice(index, 1);
+                console.log(`Removed element with ID ${elementId} from activeGameElements.`);
+            } else {
+                console.warn(`Element with ID ${elementId} not found in activeGameElements.`);
+            }
+        }
+
+        // --- Game Initialization ---
+
+        if (gameArea.viewBox && gameArea.viewBox.baseVal) {
+            const viewBox = gameArea.viewBox.baseVal;
+            gameAreaViewBoxWidth = viewBox.width;
+            gameAreaViewBoxHeight = viewBox.height;
+            console.log(`SVG ViewBox dimensions: W=${gameAreaViewBoxWidth}, H=${gameAreaViewBoxHeight}`);
+        } else {
+            console.warn("Could not read viewBox from SVG. Using default dimensions. Make sure SVG has a viewBox attribute.");
+            // Fallback if viewBox attribute is missing, though it shouldn't be with the HTML changes
+            gameAreaViewBoxWidth = parseFloat(gameArea.getAttribute('width')) || 404;
+            gameAreaViewBoxHeight = parseFloat(gameArea.getAttribute('height')) || 718;
+        }
+
+        let currentWordIndex = 0;
+
+        // --- Game State ---
+        let activeGameElements = [];
+        const MAX_ONSCREEN_ELEMENTS = 5;
+        let lastSpawnTime = 0;
+
+        let score = 0;
+        let lastTimestamp = 0;
+        let animationFrameId = null;
+
+        // --- Configuration for Box and Text ---
+
+        // Get the actual box template from <defs>
+
+
+        const textFontSize = 14; // Or make this dynamic too if needed
+
+        // --- Recalculate offsets based on potentially dynamic box dimensions ---
+        // Ensure these are calculated AFTER boxWidth and boxHeight are determined
+
+        // --- Utility Functions (Score Display and splat) ---
+        // ... (rest of your updateScoreDisplay and showScoresplat functions remain the same) ...
+        function updateScoreDisplay() {
+            const scoreTextTemplate = document.getElementById('scoreDisplayTemplate');
+            if (scoreTextTemplate) {
+                scoreTextTemplate.textContent = `Score: ${score}`;
+                //liveGameArea = document.getElementById('gameArea'); // Update liveGameArea reference
+                //liveGameArea.appendChild(scoreTextTemplate); // Clone to avoid removing the original
+        }
+
+    }
+        function parseSVGString(svgString) {
+            // Use DOMParser for safer parsing than innerHTML directly on gameArea or a temp SVG
+            const parser = new DOMParser();
+            // We wrap the fragment in an <svg> tag for the parser to work correctly,
+            // then extract the child.
+            const svgDoc = parser.parseFromString(`<svg xmlns="${svgNS}">${svgString.trim()}</svg>`, "image/svg+xml");
+
+            // Check for parser errors (important!)
+            const parserError = svgDoc.querySelector("parsererror");
+            if (parserError) {
+                console.error("Error parsing SVG string:", parserError.textContent);
+                return null;
+            }
+            return svgDoc.documentElement.firstChild; // This is the element defined in your string (e.g., the <g> or <text>)
+        }
+
+        // Template for the text element. Using placeholders like __TEXT_ID__ 
+        let ellipseElementTemplate = '<ellipse id="__ELLIPSE_ID__" cx="50.106" cy="24.933" fill="url(#c)" stroke="url(#d)" stroke-width=".472" rx="49.658" ry="24.83"/>';
+        let ellipseElementTemplate1 = '<ellipse id="__ELLIPSE_ID__" cx="50.106" cy="24.933" fill="red" stroke="black" stroke-width=".472" rx="49.658" ry="24.83"/>';
+        let textElementTemplate = `<text
+    id="__TEXT_ID__"
+    x="50"
+    y="25"
+    font-family="Verdana"
+    font-weight="bold"
+    font-size="6"
+    fill="black"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    lengthAdjust="spacingAndGlyphs"
+    text-rendering="optimizeLegibility"
+    textLength="90"
+  >__TEXT_CONTENT__</text>`;
+
+
+        // Placeholder for the text content itself
+        let defaultTextContent = "I need help on problem one, replace the values please, and explain, I'm confused. (Supply problem 1)";
+
+        // Counter for unique IDs
+        let instanceCounter = 0;
+
+
+        // Constants for game mechanics
+        let isScoreSplatAnimating = false;  // Flag to track if a score splat animation is in progress
+        const SCORE_SPLAT_ANIMATION_DURATION_MS = 2000;// Duration for the score splat animation
+        let scoreSplatVisible = false; // To track if the splat is currently visible
+        let scoreSplatTimeoutSeconds = 2;// To manage splat visibility timing... time game is paused, and splat is visible
+        let wordSpeed = 90; // Speed at which words move down the screen, can be adjusted in settings
+
+        const desiredPixelSpacing = 200;    // Desired visual spacing in pixels between words
+
+        /**
+         * Calculates a spawn interval in milliseconds based on word speed.
+         * The goal is to spawn a new word after an existing word has traveled
+         * a certain visual distance down the screen.
+         *
+         * @param {number} speed - The speed of the words in pixels per second.
+         * @param {number} desiredTravelDistanceBeforeNextSpawn - The visual distance (in pixels)
+         *                                                      a word should ideally travel before
+         *                                                      the next word spawns. This helps
+         *                                                      control the visual density/spacing.
+         * @returns {number} The calculated spawn interval in milliseconds.
+         */
+        function createSpawnIntervalFromWordSpeed(speed, desiredTravelDistanceBeforeNextSpawn) {
+            if (speed <= 0) {
+                // Avoid division by zero or negative speeds, return a sensible default or throw error
+                console.warn("Speed must be positive. Using a default spawn interval.");
+                return 5000; // Or some other default maximum interval
+            }
+
+            // Time (in seconds) for a word to travel desiredTravelDistanceBeforeNextSpawn pixels:
+            // Time = Distance / Speed
+            const timeToTravelDistanceInSeconds = desiredTravelDistanceBeforeNextSpawn / speed;
+
+            // Convert this time to milliseconds for the spawn interval:
+            const spawnIntervalMilliseconds = timeToTravelDistanceInSeconds * 1000;
+
+            return spawnIntervalMilliseconds;
+        }
+
+        // --- How to use it: ---
+
+        const currentWordSpeed = 70; // pixels per second (example)
+        // pixels (example: spawn a new word when the previous is 200px down)
+
+        // Calculate the spawn interval based on current speed and desired spacing
+        const ELEMENT_SPAWN_INTERVAL = createSpawnIntervalFromWordSpeed(currentWordSpeed, desiredPixelSpacing);
+
+        console.log(`Speed: ${currentWordSpeed} px/s, Desired Spacing: ${desiredPixelSpacing} px`);
+        console.log(`Calculated Spawn Interval: ${ELEMENT_SPAWN_INTERVAL} ms`);
+
+        // Example with your "goofy" slow speed:
+        const slowWordSpeed = 9; // px/s
+        const slowSpawnInterval = createSpawnIntervalFromWordSpeed(slowWordSpeed, desiredPixelSpacing);
+        console.log(`Speed: ${slowWordSpeed} px/s, Desired Spacing: ${desiredPixelSpacing} px`);
+        console.log(`Calculated Spawn Interval for slow speed: ${slowSpawnInterval} ms`); // Should be much longer
+
+        // Example with your "zooming" speed:
+        const fastWordSpeed = 9000; // px/s
+        const fastSpawnInterval = createSpawnIntervalFromWordSpeed(fastWordSpeed, desiredPixelSpacing);
+        console.log(`Speed: ${fastWordSpeed} px/s, Desired Spacing: ${desiredPixelSpacing} px`);
+        console.log(`Calculated Spawn Interval for fast speed: ${fastSpawnInterval} ms`); // Should be very short
+
+        //need to know if the text is possitive or negative prompt... if ai should be asked the question or not... .. might be able to remove this later.. check array
+        function createFullGroupInstance(textContent, customTextLength) {
+
+
+            if (liveGameArea) {
+                if (logSVG === true) console.log("liveGameArea is EXISTS", liveGameArea);
+            } else {
+                console.log("FAILED: liveGameArea NULLLLLLLL", liveGameArea);
+            }
+
+            instanceCounter++;
+            const uniqueTextId = `complexTextInstance_${instanceCounter}`;
+            const uniqueGroupId = `complexGroupInstance_${instanceCounter}`;
+            const uniqueEllipseId = `complexEllipseInstance_${instanceCounter}`;
+
+
+            // 1. Replace placeholders in the text element template
+            let newTextElementString = textElementTemplate
+                .replace(/__TEXT_ID__/g, uniqueTextId) // 'g' flag for global replace (if placeholder used multiple times)
+                .replace(/__TEXT_CONTENT__/g, textContent);
+
+            let newEllipseElementString = ellipseElementTemplate.replace(/__ELLIPSE_ID__/g, uniqueEllipseId);
+            // 'g' flag for global replace (if placeholder used multiple times)
+
+
+
+            // Optional: Adjust textLength if a custom one is provided
+            if (typeof customTextLength !== 'undefined') {
+                // This is a bit more involved as textLength is an attribute.
+                // We can modify the string, or parse and then modify.
+                // For simplicity with string replacement here (can be fragile):
+                newTextElementString = newTextElementString.replace(
+                    /textLength="\d+"/g, // Matches textLength="any_number"
+                    `textLength="${customTextLength}"`
+                );
+
+                // 2. Create the group string
+                const groupElementString = `<g id="${uniqueGroupId}" transform="translate(0, 0)">
+            ${newEllipseElementString}
+            ${newTextElementString}</g>`;
+                if (logSVG === true) console.log("String to parse:", groupElementString);
+
+                // 3. Parse and append to the main SVG
+                if (liveGameArea) {
+                    // Use DOMParser for safer and more robust parsing
+                    const parser = new DOMParser();
+
+                    // CONSTRUCT AND STORE THE STRING FIRST
+                    const svgDocFragmentString = `<svg xmlns="http://www.w3.org/2000/svg">${groupElementString}</svg>`;
+
+                    // NOW LOG IT (using the variable you just created)
+                    if (logSVG === true) console.log("Complete string given to DOMParser:", svgDocFragmentString);
+
+                    // NOW PARSE IT (using the variable)
+                    const svgDocFragment = parser.parseFromString(svgDocFragmentString, "image/svg+xml");
+
+                    const newGroupElement = svgDocFragment.documentElement.firstChild; // This will be the <g> element
+
+                    if (newGroupElement) {
+                        // It's good practice to also check if the element is actually an SVGGElement
+                        if (newGroupElement.nodeName.toLowerCase() === 'g') {
+                            const clone = newGroupElement.cloneNode(true);
+                            liveGameArea.appendChild(clone);
+                            if (logSVG === true) console.log(`Created group with ID: ${uniqueGroupId}`);
+
+                            //add swipe functionality 
+
+                            clone.addEventListener('pointerdown', (event) => {
+                                if (swipeState.activeElement) return; // Already processing another swipe
+                                // --- IMPLICIT PAUSE ---
+                                if (!gamePaused) { // Only pause if not already paused by some other means
+                                    gamePaused = true;
+                                    timeWhenPauseActuallyStarted = performance.now(); // Record when this implicit pause started
+                                    console.log("Game implicitly paused for swipe");
+                                    // Here, you would typically stop your game loop, clear animation intervals/timeouts, etc.
+                                    // For example, if you have a function that moves words down:
+                                    // clearAllWordMovementIntervals(); // A hypothetical function
+                                }
+                                // Only care about the primary mouse button, or any touch/pen
+                                if (event.pointerType === 'mouse' && event.button !== 0) {
+                                    return;
+                                }
+
+                                swipeState.startX = event.clientX; // Corrected: Use event.clientX directly
+                                swipeState.startY = event.clientY; // Corrected: Use event.clientY directly
+                                swipeState.startTime = performance.now();
+                                swipeState.activeElement = clone;   // Track the element being swiped
+                                swipeState.pointerId = event.pointerId; // Store the ID of this specific pointer
+
+                                // VERY IMPORTANT: Set pointer capture on the element that received pointerdown
+                                // This ensures this element (or its listeners on document) continues to get
+                                // pointermove and pointerup even if the pointer moves outside of it.
+                                try {
+                                    clone.setPointerCapture(event.pointerId);
+                                } catch (e) {
+                                    console.warn("Could not set pointer capture:", e);
+                                    // Fallback or error handling if needed, though usually works in modern browsers
+                                }
+
+
+                                // Add listeners to the document to track the pointer globally
+                                document.addEventListener('pointermove', handleDocumentPointerMove);
+                                document.addEventListener('pointerup', handleDocumentPointerEnd);     // Use the unified end handler
+                                document.addEventListener('pointercancel', handleDocumentPointerEnd); // Use the unified end handler
+
+                                event.preventDefault(); // Good for preventing text selection etc.
+                                console.log(`Pointer DOWN on ${clone.id}, captured pointerId: ${event.pointerId}`);
+                                try {
+                                    clone.setPointerCapture(event.pointerId);
+                                } catch (e) {
+                                    console.error("Pointer capture failed:", e, "on element:", clone, "pointerId:", event.pointerId);
+                                }
+
+                                // Inside pointerdown on the element
+                                const rect = swipeState.activeElement.getBoundingClientRect(); // Position relative to viewport
+
+                                // Calculate offset of the touch within the element
+                                swipeState.offsetX = event.clientX - rect.left;
+                                swipeState.offsetY = event.clientY - rect.top;
+
+                                swipeState.isDragging = true;
+                                // ... (capture pointer, etc.)
+                            });
+
+                            return clone;  // Return the clone instead of the original
+                        } else {
+                            console.error("Parsed element was not a <g> tag. It was:", newGroupElement.nodeName, newGroupElement);
+                            return null;
+                        }
+                    } else {
+                        console.error("Failed to parse the group element string. newGroupElement is null.");
+                        // Check for parser errors more explicitly here if newGroupElement is null
+                        const parserError = svgDocFragment.querySelector("parsererror");
+                        if (parserError) {
+                            console.error("PARSER ERROR details:", parserError.textContent);
+                        }
+                        return null;
+                    }
+                }
+
+                console.error("liveGameArea was null or undefined before parsing.");
+                return null;
+            }
+
+        }
+        function handleGameResumeAfterSystemPause() {
+            const timeNow = performance.now();
+            console.log("Game resuming after system interruption (e.g., tab became visible).");
+
+            lastTimestamp = timeNow;
+            gameTimeAccumulator = 0;
+            lastSpawnTime = timeNow;
+            // Ensure game is unpaused
+            setPauseState(false);
+            // If you were tracking pause duration for visibility changes specifically:
+            // if (timeWhenPauseActuallyStarted > 0) {
+            //     const durationOfPause = (timeNow - timeWhenPauseActuallyStarted) / 1000;
+            //     console.log(`Tab was hidden/inactive for approx ${durationOfPause.toFixed(2)} seconds.`);
+            //     timeWhenPauseActuallyStarted = 0;
+            // }
+        }
+
+
+
+
+        document.addEventListener("visibilitychange", () => {
+            if (gameStopped) {
+                return; // If game is fully stopped, visibility changes don't matter for game logic
+            }
+
+            if (document.hidden) {
+                // --- PAGE IS HIDDEN ---
+                if (!gamePaused) { // Only "auto-pause" if not already paused by the user
+                    console.log("Page hidden, auto-pausing game logic.");
+                    // You might not want to call setPauseState(true) if it shows a pause menu,
+                    // as this is a system-level pause.
+                    // Instead, you might have a separate flag or just rely on not running updates.
+                    // For simplicity, let's assume we treat it like a pause for now.
+                    // If you *do* call setPauseState(true), make sure its internal logic
+                    // doesn't conflict with what you want to happen on visibility resume.
+
+                    // The most important thing is that your gameLoop will effectively pause
+                    // because requestAnimationFrame stops firing regularly.
+                    // We can record the time for logging if desired.
+                    // timeWhenPauseActuallyStarted = performance.now();
+
+                    setPauseState(true); // This will handle timing resets when unpausing
+                    console.log("Game auto-paused due to page visibility change.");
+
+
+                }
+            } else {
+                // --- PAGE IS VISIBLE AGAIN ---
+                console.log("Page became visible.");
+                // CRITICAL: Reset timing variables to prevent a large deltaTime jump and catch-up.
+                handleGameResumeAfterSystemPause();
+
+                // If you had a specific "auto-paused due to visibility" flag,
+                // you would clear it here. If you used your main 'gamePaused' flag,
+                // and want to auto-resume ONLY if it was visibility that paused it,
+                // you'd need more complex flag management.
+
+                // Simplest approach: if the game wasn't *manually* paused by the user,
+                // and it becomes visible, it should be running.
+                // The handleGameResumeAfterSystemPause() already prepared the timers.
+                // If your gameLoop correctly checks a 'gamePaused' flag (for manual pauses),
+                // it will resume normally if 'gamePaused' is false.
+            }
+        });
+
+
+
+
+
+        function setPauseState(pause) {
+            if (gamePaused === pause) {
+                console.warn("Game is already in the requested pause state:", pause);
+                return;
+            }
+            gamePaused = pause;
+            if (pause) {
+                timeWhenPauseActuallyStarted = performance.now(); // Record when the pause started
+                console.log("Game paused at", timeWhenPauseActuallyStarted);
+            } else {
+                // --- ACTIONS WHEN GAME IS UNPAUSED ---
+                const timeNow = performance.now();
+                const durationOfPause = timeWhenPauseActuallyStarted > 0 ? (timeNow - timeWhenPauseActuallyStarted) / 1000 : 0;
+                console.log(`Game unpaused. Was paused for approx ${durationOfPause.toFixed(2)} seconds.`);
+
+                lastTimestamp = timeNow;         // CRUCIAL: Resets delta time calculation for the *next* frame
+                gameTimeAccumulator = 0;          // CRUCIAL: Prevents the fixed-step loop from "catching up" many missed steps
+                lastSpawnTime = timeNow;         // CRUCIAL: Prevent immediate spawn after a long pause
+
+                timeWhenPauseActuallyStarted = 0; // Reset pause start time tracker
+
+            }
+
+        }
+
+        // --- Score Display and Splat Functions --- provides whitespace for the score display and splat messages
+
+        function showScoresplat(points, message) {
+            // Create splat element
+            const splat = document.createElement('div');
+            splat.className = 'score-splat';
+            splat.textContent = message + ` ${points > 0 ? '+' : ''}${points}`;
+            splat.style.color = 'green'; // Default color
+            splat.style.color = points > 0 ? 'green' : 'red'; // Color based on score
+            splat.style.position = 'absolute';
+            splat.style.zIndex = '1000'; // Ensure it appears above other content
+            if (message === "START!") {
+                splat.style.color = 'green'; // Default color
+                splat.textContent = "START!"; // Set the text content
+                splat.style.fontSize = '40px'; // Make it larger for emphasis
+                splat.style.fontWeight = 'bold'; // Make it bold for emphasis
+            }
+
+            // Set position to center of the game area
+            const liveGameArea = document.getElementById('gameArea');
+            if (!liveGameArea) {
+                console.error("liveGameArea is null, cannot position splat.");
+                return; // Exit if game area is not found
+            }
+            // Use the liveGameArea dimensions to position the splat
+            // Center the splat in the game area
+            // This assumes the game area is positioned relative to the viewport
+
+            // If you want to position it relative to a click or center, you can adjust this
+            // For example, if you want it to appear at the center of the game area:
+            // Position relative to click or center
+            // Get the dimensions of the splat itself
+            const splatWidth = splat.offsetWidth;
+            const splatHeight = splat.offsetHeight;
+            // Center it in the game area
+            // Get the bounding rectangle of the game area
+
+            const rect = liveGameArea.getBoundingClientRect();
+            splat.style.left = `${rect.left + rect.width / 2}px`;
+            splat.style.top = `${rect.top + rect.height / 2}px`;
+            // Adjust for the size of the splat
+            // splat.style.transform = `translate(-50%, -50%)`; // Center it by offsetting half its width and height
+
+
+            // --- ANIMATION LOGIC ---
+            // If a splat is already animating, do not start a new one
+            if (isScoreSplatAnimating) {
+                console.warn("A score splat animation is already in progress. Skipping new splat.");
+                return; // Exit if a splat is already animating
+            }
+            isScoreSplatAnimating = true;
+            console.log("Score splat started, game logic paused for animation.");
+
+            document.body.appendChild(splat);
+            // Trigger animation
+            requestAnimationFrame(() => {
+                splat.classList.add('show');
+            });
+            // Remove after animation
+            setTimeout(() => {
+                splat.remove();
+            }, scoreSplatTimeoutSeconds * 1000);
+
+
+
+
+            const initialTransform = splat.style.transform || 'translate(-50%, -50%)'; // Ensure it has a base
+            const animation = splat.animate([
+                { opacity: 1, transform: `${initialTransform} scale(1)` },
+                { opacity: .8, transform: `${initialTransform} scale(1.5) translateY(-30px)` }
+            ], {
+                duration: scoreSplatTimeoutSeconds * 1000,
+                easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+            });
+
+            animation.onfinish = () => {
+                splat.remove();
+                isScoreSplatAnimating = false;
+                console.log("Score splat finished, game logic can resume (if not otherwise paused).");
+                // Deactivate visual cue for this pause if you had one.
+                //TODO unimplicitpause here instead of elsewere
+                setPauseState(false); // Unpause the game after splat animation
+
+
+            };
+
+        }
+
+
+        // (Your utility functions: updateScoreDisplay, showScoresplat - need to use gameAreaViewBoxWidth/Height)
+        function updateScoreDisplay() {
+            const scoreTextTemplate = document.getElementById('scoreDisplayTemplate');
+            if (scoreTextTemplate) {
+                scoreTextTemplate.textContent = `Score: ${score}`;
+            }
+        }
+
+        // --- Game Element Creation ---
+        // --- Game Element Creation ---
+        // --- Game Element Creation (MODIFIED) ---
+
+        function createFallingWordBox() {
+            if (activeGameElements.length >= MAX_ONSCREEN_ELEMENTS) {
+                return;
+            }
+
+            // Generate random number and check if even/odd
+            const randomNum = Math.floor(Math.random() * 100);
+            const isEven = randomNum % 2 === 0;
+
+            // Select word from appropriate list
+            // Select word from appropriate list RANDOMLY
+            let word;
+            if (isEven) {
+                if (wordListPos.length > 0) { // Check if the array is not empty
+                    const randomIndex = Math.floor(Math.random() * wordListPos.length);
+                    word = wordListPos[randomIndex];
+                } else {
+                    word = ""; // Or some default/error handling if the list is empty
+                    console.warn("wordListPos is empty!");
+                }
+            } else {
+                if (wordListNeg.length > 0) { // Check if the array is not empty
+                    const randomIndex = Math.floor(Math.random() * wordListNeg.length);
+                    word = wordListNeg[randomIndex];
+                } else {
+                    word = ""; // Or some default/error handling if the list is empty
+                    console.warn("wordListNeg is empty!");
+                }
+            }
+
+            // Calculate initial position
+            const scaledWidth = baseGroupWidth * scale;  // 100 * 3.2 = 320 units wide when scaled
+
+            const initialX = (gameAreaViewBoxWidth / 2) - (scaledWidth / 2);  // Centers the scaled element
+            const scaledHeight = baseGroupHeight * scale; // 50 * 3.2 = 160 units tall when scaled
+            // Initial Y position is above the visible area
+            const initialY = 0 - scaledHeight;
+
+            // Create instance with position information
+            instance1 = createFullGroupInstance(word, 80);
+            instance1.setAttribute('transform', `translate(${initialX}, ${initialY})`);
+
+            instance1.setAttribute('transform', `translate(${initialX}, ${initialY}) scale(${scale})`);
+
+            instance1.setAttribute('data-word', word); // Store the word in a data attribute
+
+
+            // Store in activeGameElements with necessary properties
+            activeGameElements.push({
+                element: instance1,
+                currentY: initialY,
+                currentX: initialX,
+                speed: wordSpeed,// Speed at which the word box falls
+                word: word,
+                height: baseGroupHeight
+            });
+            //commented out click listener, now i use swiping like a boss
+            //instance1.addEventListener('click', handleWordBoxClick); // Attach click handler
+        }
+        // --- Click Handler for Word Boxes ---
+
+        // --- Game Loop Functions ---
+        // ... (updateElementPositions and gameLoop remain largely the same) ...
+        function updateElementPositions(deltaTime) {
+            for (let i = activeGameElements.length - 1; i >= 0; i--) {
+                const elem = activeGameElements[i];
+                elem.currentY += elem.speed * deltaTime;
+
+                const elementId = elem.element.id;
+                const liveElement = document.getElementById(elementId);
+
+                if (liveElement && (!gamePaused)) {
+                    liveElement.setAttribute('transform',
+                        `translate(${elem.currentX}, ${elem.currentY}) scale(${scale})`);
+                }
+
+
+                //get bottom of element
+                const botomY = elem.bottom = elem.currentY + (baseGroupHeight * scale); // Calculate bottom position based on currentY and height
+                const distanceToBottom = gameAreaViewBoxHeight - botomY;
+                const thresholdForApproachingBottom = 5; // Threshold for approaching the bottom
+                console.log(`Element ${elementId} bottom Y: ${botomY}, distance to bottom: ${distanceToBottom}`);
+                if (botomY > gameAreaViewBoxHeight) {
+                    console.log(`Element ${elementId} is out of bounds at Y: ${botomY}. Removing.`);
+                } else {
+                    //approuching the bottom of the viewBox
+                    if (distanceToBottom < thresholdForApproachingBottom) { // If within 50px of    the bottom
+                        console.log(`Element ${elementId} is approaching the bottom at Y: ${botomY}.`);
+                        setPauseState(true); // Pause the game if an element is approaching the bottom
+                        //todo add a visual cue for the player to not stress out, this is a no stress learning game
+                    } else {
+                        // Element is within bounds 
+                    }
+                    console.log(`Element ${elementId} is within bounds at Y: ${botomY}.`);
+                }
+
+
+
+                // Improved out-of-bounds cleanup
+                if (elem.currentY > gameAreaViewBoxHeight) {
+                    if (liveElement) {
+                        // Remove event listeners
+                        //liveElement.removeEventListener('click', handleWordBoxClick);
+                        // Remove from DOM
+                        liveGameArea.removeChild(liveElement);
+                    }
+                    // Remove from tracking array
+                    activeGameElements.splice(i, 1);
+                }
+            }
+        }
+
+        const MAX_DELTA_TIME = 0.01666666667; // 100ms, your fixed time step in seconds
+        // 0.01666666667 // 16.67ms, roughly 60 FPS
+
+        function gameLoop(currentTimestamp) {
+            if (!liveGameArea) {
+                liveGameArea = document.getElementById('gameArea');
+                if (!liveGameArea) {
+                    console.error("CRITICAL: liveGameArea not found! Stopping loop.");
+                    return;
+                }
+            }
+
+            if (gameStopped) {
+                console.log("Game is stopped. Game loop terminated.");
+                return;
+            }
+
+            // Initialize lastTimestamp on the very first frame
+            if (lastTimestamp === 0) {
+                lastTimestamp = currentTimestamp;
+                animationFrameId = requestAnimationFrame(gameLoop); // Request next frame and exit this one
+                return;
+            }
+
+            let deltaTime = (currentTimestamp - lastTimestamp) / 1000; // Delta time in seconds
+
+            // --- Handle Pausing ---
+            // If game is paused, we don't update logic or lastTimestamp for delta calc.
+            // We just keep requesting frames to keep the loop "alive" for when it unpauses.
+            if (gamePaused) {
+                if(gameStateLogs ===true)console.log("GameLoop: Game is paused. Skipping updates.");
+                // When unpausing, ensure lastTimestamp is reset externally (see unpauseGame example)
+                animationFrameId = requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // --- Update lastTimestamp for the NEXT frame's deltaTime calculation ---
+            // This should happen REGARDLESS of interaction pauses, so deltaTime is always fresh.
+            lastTimestamp = currentTimestamp;
+
+            // --- DeltaTime Sanity Check (Optional but good for extreme cases) ---
+            if (deltaTime <= 0) {
+                // console.warn(`GameLoop: Negative or zero deltaTime (${deltaTime}), skipping update logic for this frame.`);
+                animationFrameId = requestAnimationFrame(gameLoop); // Still request next frame
+                return;
+            }
+            // Cap deltaTime to prevent massive jumps (e.g., after tab was hidden for a long time
+            // and Page Visibility API wasn't used to pause AND reset lastTimestamp)
+            const MAX_POSSIBLE_DELTA_TIME = 0.5; // e.g., 500ms
+            if (deltaTime > MAX_POSSIBLE_DELTA_TIME) {
+                console.warn(`GameLoop: Large deltaTime (${deltaTime}) capped to ${MAX_POSSIBLE_DELTA_TIME}. Consider Page Visibility API for pausing.`);
+                deltaTime = MAX_POSSIBLE_DELTA_TIME;
+            }
+
+            // --- Fixed-Step Update Loop ---
+            gameTimeAccumulator += deltaTime;
+
+            while (gameTimeAccumulator >= MAX_DELTA_TIME) {
+                // Only run game logic if not paused by interaction/splat
+                if (!gamePaused && !isScoreSplatAnimating) {
+                    // --- Your Game Logic Updates using MAX_DELTA_TIME ---
+
+                    // Spawning (using direct timestamp comparison, ensure lastSpawnTime is managed with pauses)
+                    // If game can pause for long, (currentTimestamp - lastSpawnTime) can be huge.
+                    // Consider resetting lastSpawnTime when unpausing, or use a delta-time accumulator for spawning.
+                    if (currentTimestamp - lastSpawnTime > ELEMENT_SPAWN_INTERVAL) {
+                        createFallingWordBox();
+                        lastSpawnTime = currentTimestamp; // Reset spawn timer
+                    }
+
+                    // Alternative Spawning (delta-time based, more robust with fixed step)
+                    // timeSinceLastSpawnThisFixedStep += MAX_DELTA_TIME;
+                    // if (timeSinceLastSpawnThisFixedStep >= ELEMENT_SPAWN_INTERVAL_SECONDS) {
+                    // createFallingWordBox();
+                    // timeSinceLastSpawnThisFixedStep = 0;
+                    // }
+
+                    updateElementPositions(MAX_DELTA_TIME); // Pass the FIXED time step
+                    updateScoreDisplay(); // Update score display based on current game state//puts the game scroe display back on the top of the screen
+                    // otherFixedStepLogic(MAX_DELTA_TIME);
+                } else {
+                    // Interaction pause or splat animation: Fixed-step logic is also paused.
+                    // If there's any logic that should run *despite* these pauses but
+                    // *during* a fixed step, it would go here. Usually, nothing does.
+                }
+                gameTimeAccumulator -= MAX_DELTA_TIME;
+            }
+
+            // --- Rendering (Happens every frame, uses current element states) ---
+            // renderAllGameElements(); // (This would be where you draw things based on their updated positions)
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+
+
+
+
+
+
+
+
+        function startGame() {
+            gamePaused = false; // Reset paused state
+            if (animationFrameId === null) {
+                hidePauseMenu(); // Hide pause menu if visible
+                console.log("Starting new game.");
+                score = 0; // Reset score
+                initializeGame(); // Reset game state
+                //startGame(); // Start the game loop dont do that it's recusive...!
+                console.log("Starting game loop.");
+                lastTimestamp = performance.now();
+                animationFrameId = requestAnimationFrame((timestamp) => gameLoop(timestamp, liveGameArea));
+                gameStopped = false; // Game is now running
+            } else {
+                console.log("Game is already running, cannot start again.");
+            }
+
+        }
+
+
+        function stopGame() {
+            gameStopped = true; // Mark the game as fully stopped
+            gamePaused = false; // Clear paused state
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                console.log("Game stopped.");
+            } else {
+                console.log("Game is not running, cannot stop.");
+            }
+
+            // Clean up all active elements
+            activeGameElements.forEach(elem => {
+                if (elem.element) {
+                    //elem.element.removeEventListener('click', handleWordBoxClick);
+                    if (elem.element.parentNode) {
+                        elem.element.parentNode.removeChild(elem.element);
+                    }
+                    elem.element = null;
+                }
+            });
+
+            activeGameElements = [];
+            lastTimestamp = 0;
+        }
+
+        function pauseGame() {
+            timeWhenPauseActuallyStarted = performance.now();
+            if (!animationFrameId) {
+                console.log("Game is not running, cannot pause.");
+                return; // Game is not running, do nothing
+            }
+
+            if (gamePaused) {
+                console.log("Game is already paused.");
+                return; // Already paused, do nothing
+            }
+
+            gamePaused = true;
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null; // don't do this, this tells us the game was not running
+            console.log("Game paused.");
+
+            // Show pause menu
+            const pauseMenuOverlay = document.getElementById('pauseMenuOverlay');
+            if (pauseMenuOverlay) {
+                pauseMenuOverlay.style.display = 'flex'; // Show pause menu
+            }
+        }
+        function hidePauseMenu() {
+            const pauseMenuOverlay = document.getElementById('pauseMenuOverlay');
+            if (pauseMenuOverlay) {
+                pauseMenuOverlay.style.display = 'none'; // Hide pause menu
+            }
+        }
+
+        function fitSvgToScreenWithPadding(svgElement, designedWidth, designedHeight, PADDING_TOP_BOTTOM = 5) {
+            if (!svgElement) {
+                console.error("fitSvgToScreenWithPadding: svgElement is not defined!");
+                return;
+            }
+            if (!designedWidth || !designedHeight) {
+                console.warn("fitSvgToScreenWithPadding: designedWidth or designedHeight not provided. Attempting to use viewBox.");
+                const vb = svgElement.viewBox.baseVal;
+                if (vb && vb.width && vb.height) {
+                    designedWidth = vb.width;
+                    designedHeight = vb.height;
+                } else {
+                    console.error("fitSvgToScreenWithPadding: Cannot determine aspect ratio. Please set viewBox or pass designed dimensions.");
+                    return;
+                }
+            }
+
+            const viewportWidth = window.innerWidth;
+            // Reduce available height by the total top and bottom padding
+            const availableHeight = window.innerHeight - (PADDING_TOP_BOTTOM * 2);
+            // Use viewportWidth as availableWidth, assuming no horizontal padding for now
+            const availableWidth = viewportWidth;
+
+
+            const svgAspectRatio = designedWidth / designedHeight;
+            // Calculate aspect ratio of the *available space* after padding
+            const availableSpaceAspectRatio = availableWidth / availableHeight;
+
+            let newWidth, newHeight;
+
+            if (availableSpaceAspectRatio > svgAspectRatio) {
+                // Available space is wider than SVG aspect ratio
+                // -> SVG height should match availableHeight, width adjusts
+                newHeight = availableHeight;
+                newWidth = availableHeight * svgAspectRatio;
+            } else {
+                // Available space is taller (or same aspect) than SVG aspect ratio
+                // -> SVG width should match availableWidth, height adjusts
+                newWidth = availableWidth;
+                newHeight = availableWidth / svgAspectRatio;
+            }
+
+            // Ensure calculated dimensions are not negative if padding is too large
+            newWidth = Math.max(0, newWidth);
+            newHeight = Math.max(0, newHeight);
+
+            svgElement.style.width = `${newWidth}px`;
+            svgElement.style.height = `${newHeight}px`;
+
+            svgElement.setAttribute('viewBox', `0 0 ${designedWidth} ${designedHeight}`);
+            svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+            // Centering Logic
+            // The container for this centering is effectively the viewport.
+            // We want to center it within the viewport.
+            // The (0,0) of the viewport is top-left.
+            // top: 50% puts the element's top at the viewport's vertical midpoint.
+            // transform: translateY(-50%) then shifts it up by half of ITS OWN new height.
+            // This achieves perfect vertical centering in the viewport.
+            // The padding is already accounted for in newHeight, so the standard centering works.
+
+            svgElement.style.position = 'absolute';
+            svgElement.style.top = '50%';
+            svgElement.style.left = '50%';
+            svgElement.style.transform = 'translate(-50%, -50%)';
+
+            // No direct CSS padding on svgElement needed here because we've
+            // already sized it to leave space around it.
+            // If you add CSS padding to svgElement, it will be *in addition* to this.
+        }
+
+        // --- Example Usage ---
+        // const liveGameArea = document.getElementById('gameArea'); // Your SVG element
+        const NATIVE_SVG_WIDTH = 1600;
+        const NATIVE_SVG_HEIGHT = 900;
+        const PADDING_VALUE = 5; // 5px padding top and bottom
+
+        if (liveGameArea) {
+            fitSvgToScreenWithPadding(liveGameArea, NATIVE_SVG_WIDTH, NATIVE_SVG_HEIGHT, PADDING_VALUE);
+            window.addEventListener('resize', () => {
+                fitSvgToScreenWithPadding(liveGameArea, NATIVE_SVG_WIDTH, NATIVE_SVG_HEIGHT, PADDING_VALUE);
+            });
+        }
+
+        // --- Control and Setup ---
+        // ... (initializeGame, button event listeners remain the same) ...
+        function resumeButtonFunc() {
+            if (gamePaused) {
+                console.log("Resuming game from pause.");
+                gamePaused = false; // Reset paused state
+
+                const pauseDuration = performance.now() - timeWhenPauseActuallyStarted;
+                lastSpawnTime += pauseDuration;
+                lastTimestamp = performance.now();
+                animationFrameId = requestAnimationFrame((timestamp) => gameLoop(timestamp, liveGameArea));
+
+                // Hide pause menu if it's visible
+                hidePauseMenu();
+            } else {
+                console.log("Starting new game.");
+                initializeGame(); // Reset game state
+                startGame(); // Start the game loop
+            }
+        }
+        function initializeGame() {
+            updateScoreDisplay();
+
+            // Clean up existing elements
+            activeGameElements.forEach(elem => {
+                if (elem.element) {
+                    // Remove event listeners
+                    //elem.element.removeEventListener('click', handleWordBoxClick);
+                    // Remove from DOM if it exists
+                    if (elem.element.parentNode) {
+                        elem.element.parentNode.removeChild(elem.element);
+                    }
+                    // Clear reference
+                    elem.element = null;
+                }
+            });
+
+            // Clear array
+            activeGameElements = [];
+            currentWordIndex = 0;
+            lastSpawnTime = performance.now();
+
+            showScoresplat("GAME", "START!")
+        }
+
+        // 4. Add cleanup on game stop
+        function stopGame() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
+            // Clean up all active elements
+            activeGameElements.forEach(elem => {
+                if (elem.element) {
+                    //elem.element.removeEventListener('click', handleWordBoxClick);
+                    if (elem.element.parentNode) {
+                        elem.element.parentNode.removeChild(elem.element);
+                    }
+                    elem.element = null;
+                }
+            });
+
+            activeGameElements = [];
+            lastTimestamp = 0;
+        }
+
+
+        // Initial Setup
+        updateScoreDisplay();
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+
+            //load in pause ui
+
+            // Get references to your new UI elements
+            const pauseButton = document.getElementById('pauseButton');
+            const stopButton = document.getElementById('stopButton'); // Assuming you add this
+            const pauseMenuOverlay = document.getElementById('pauseMenuOverlay');
+            const resumeButton = document.getElementById('resumeButton');
+            const liveGameArea = document.getElementById('gameArea'); // Re-fetch
+            // ... get other buttons from pause menu as needed ...
+
+            // --- Event Listeners ---
+
+            if (pauseButton) {
+                //pause button click handler
+                pauseButton.addEventListener('click', () => {
+
+                    if (animationFrameId && (gamePaused === false)) {// running, so we can pause
+
+                        console.log("Pause button clicked, pausing game.");
+                        pauseGame(); // Call the pause function
+                    } else {
+
+                    }
+                });
+            }
+
+
+            if (resumeButton) {
+                resumeButton.addEventListener('click', () => {
+
+                    resumeButtonFunc();// Call the resume function
+
+                });
+            }
+
+            if (stopButton) {
+                stopButton.addEventListener('click', () => {
+                    if (!animationFrameId) {// Game is not running, start it
+                        startGame(); // Call the start function
+                        stopButton.textContent = 'Stop'; // Change button text to "Stop"
+                    } else {
+                        console.log("Stop button clicked, stopping game.");
+                        stopGame(); // Call the stop function
+                        stopButton.textContent = 'Start'; // Change button text to "Start"
+                    }
+
+                });
+            }
+            // Option 2: Define the designed dimensions
+            const NATIVE_SVG_WIDTH = 408; // The width your SVG was designed at
+            const NATIVE_SVG_HEIGHT = 718; // The height your SVG was designed at
+            const PADDING_VALUE = 5; // 5px padding top and bottom
+            if (liveGameArea) { // Make sure liveGameArea (your SVG element) exists
+                fitSvgToScreenWithPadding(liveGameArea, NATIVE_SVG_WIDTH, NATIVE_SVG_HEIGHT), PADDING_VALUE;
+                window.addEventListener('resize', () => {
+                    fitSvgToScreenWithPadding(liveGameArea, NATIVE_SVG_WIDTH, NATIVE_SVG_HEIGHT, PADDING_VALUE);
+                });
+            }
+
+        });
+    </script>
+</body>
+
+</html>

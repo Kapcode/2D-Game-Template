@@ -1,0 +1,338 @@
+ /* 2. Set base font properties on the body */
+        body {
+            font-family: 'Roboto','Open Sans', Arial, sans-serif; /* Font stack */
+            font-size: 18px;                             /* Base font size */
+            line-height: 1.6;                            /* Good for readability */
+            color: #333;                                 /* Default text color */
+            margin: 0;                                   /* Reset default margin */
+            padding-left: 2vw;                           /* Your existing padding */
+            padding-right: 2vw;                          /* Your existing padding */
+            /* height: 100%; /* You have this on html, body in separate rule, that's fine */
+            /* overflow: auto; /* You have this on html, body in separate rule */
+            /* box-sizing: border-box; /* You have this on html, body in separate rule */
+            /* scrollbar-width: thin; /* You have this on html, body in separate rule */
+        }
+
+        /* Your existing html, body combined rule - good to keep */
+        html, body {
+            height: 100%;
+            margin: 0; /* body margin reset is here too, which is fine */
+            /* Keep your padding, overflow, box-sizing, scrollbar-width here
+               as they apply to both html and body in your original setup.
+               The font properties above on 'body' will cascade down. */
+        }
+
+
+        /* 3. Style Headings */
+        h1 {
+            font-size: 2.2rem;   /* Approx 2.2 * 18px = 39.6px */
+            font-weight: 700;    /* Bold (Open Sans has a 700 weight) */
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 1.5em; /* Space after heading, relative to its own font size */
+        }
+
+        h2 { /* Example if you add h2 headings */
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 1.5em;
+            margin-bottom: 1em;
+        }
+
+        /* 4. Style Paragraphs (if you want something different from body, but it inherits by default) */
+        p {
+            /* Inherits font-family, font-size, line-height from body by default */
+            /* You can override if needed: */
+            /* font-size: 1rem; /* This would be 18px */
+            margin-bottom: 1em; /* Space between paragraphs */
+        }
+
+        /* 5. Style Lists (inherits from body/p too) */
+        ul, ol {
+            /* Inherits font settings */
+            padding-left: 20px; /* Your existing indent */
+        }
+
+        li {
+            margin-bottom: 0.5em; /* Space between list items */
+        }
+
+        /* Your other existing styles */
+        .first-line-indented-text {
+          text-indent: 30px;
+        }
+
+        .light-blue-box {
+            background-color: lightblue;
+            padding: 20px;
+            max-width: 750px; /* Good for readability */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            position: relative; /* Still good practice if other absolute elements might appear */
+
+            display: flex;
+            justify-content: center; /* Horizontally centers flex items */
+            align-items: center;    /* Vertically centers flex items */
+            /* min-height: 300px; /* Optional: give the green box a minimum height */
+        }
+
+        body > p:last-of-type {
+            padding-bottom: 50px;
+        }
+
+
+        .open-mind-box {
+            background-color: lightgreen;
+            padding: 20px; /* This padding will be OUTSIDE the centered child */
+            max-width: 750px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            position: relative; /* Still good practice if other absolute elements might appear */
+
+            display: flex;
+            justify-content: center; /* Horizontally centers flex items */
+            align-items: center;    /* Vertically centers flex items */
+            /* min-height: 300px; /* Optional: give the green box a minimum height */
+        }
+
+
+        .gradient-bias-box {
+                background: linear-gradient(to right,
+        #FF7F7F,
+        #D3D3D3 40%, /* LightGray - a lighter gray */
+        #D3D3D3 60%,
+        lightblue
+    );
+            padding: 20px;
+            max-width: 750px; /* Good for readability */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            position: relative; /* Still good practice if other absolute elements might appear */
+
+           display: flex;
+           justify-content: center; /* Horizontally centers flex items */
+           align-items: center;    /* Vertically centers flex items */
+                       /* min-height: 300px; /* Optional: give the green box a minimum height */
+        }
+        .data-box {
+            background-color: lightyellow;
+            padding: 20px;
+            max-width: 750px; /* Good for readability */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            position: relative; /* Still good practice if other absolute elements might appear */
+
+            display: flex;
+            justify-content: center; /* Horizontally centers flex items */
+            align-items: center;    /* Vertically centers flex items */
+            /* min-height: 300px; /* Optional: give the green box a minimum height */
+        }
+        .ethics-box {
+            background-image:
+        radial-gradient(circle at 20% 20%, hsl(180, 70%, 85%, 0.7) 0%, transparent 40%), /* Light Cyan bloom */
+        radial-gradient(circle at 80% 30%, hsl(300, 70%, 90%, 0.7) 0%, transparent 35%), /* Light Pink/Lavender bloom */
+        radial-gradient(circle at 50% 70%, hsl(60, 70%, 88%, 0.7) 0%, transparent 45%),  /* Light Yellow bloom */
+        radial-gradient(circle at 15% 85%, hsl(120, 60%, 85%, 0.6) 0%, transparent 50%); /* Light Greenish bloom */
+            background-blend-mode: screen;
+            color: #2c3e50; /* Dark text */
+            font-family: sans-serif;
+            padding: 20px;
+            max-width: 750px; /* Good for readability */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            position: relative; /* Still good practice if other absolute elements might appear */
+
+            display: flex;
+            justify-content: center; /* Horizontally centers flex items */
+            align-items: center;    /* Vertically centers flex items */
+            /* min-height: 300px; /* Optional: give the green box a minimum height */
+        }
+
+
+           .questions-box {
+            background-color: lightblue;
+            padding: 20px;
+            max-width: 750px; /* Good for readability */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            position: relative; /* Still good practice if other absolute elements might appear */
+
+            display: flex;
+            justify-content: center; /* Horizontally centers flex items */
+            align-items: center;    /* Vertically centers flex items */
+            /* min-height: 300px; /* Optional: give the green box a minimum height */
+        }
+
+/* Parent container for the strips and the overlay box */
+
+
+.color-strip-background {
+    position: relative; /* For absolute positioning of overlay AND strips-container */
+    max-width: 750px;
+    margin-left: auto;   /* Correct */
+    margin-right: auto;
+    padding: 20px;
+    /* --- The height of this container will determine total space for strips --- */
+    min-height: 250px; /* Example: ensure enough space for overlay and some strip visibility */
+    /* Or an explicit height: height: 400px; */
+    /* Remove padding-top and padding-bottom if strips-container handles full height */
+}
+.color-strip-background-full {
+    position: relative; /* For absolute positioning of overlay AND strips-container */
+    max-width: 750px;
+    margin: auto;
+    display: flex;
+    justify-content: center; /* Horizontally centers flex items */
+    align-items: center;    /* Vertically centers flex items */
+    min-height: 3000px; /* Optional: give the green box a minimum height */
+}
+.strips-container { /* NEW */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; /* Take full height of .color-strip-background */
+    display: flex;
+    flex-direction: column;
+    z-index: 1; /* Behind the content-overlay-box */
+}
+
+.top-color-strip {
+    flex: 1; /* Takes 50% of .strips-container's height */
+    /* height: 50%; would also work here since .strips-container has height: 100% of a defined parent height */
+    background: linear-gradient(
+            to right,
+            #8EC9E6 0%, #8EC9E6 16.66%,
+            #E68E8E 16.66%, #E68E8E 33.32%,
+            #E6E38E 33.32%, #E6E38E 49.98%,
+            #8EC9E6 49.98%, #8EC9E6 66.64%,
+            #8EE6B7 66.64%, #8EE6B7 83.30%,
+            #E68E8E 83.30%, #E68E8E 100%
+        );
+}
+
+.bottom-color-strip {
+    flex: 1; /* Takes 50% of .strips-container's height */
+     background: linear-gradient(
+            to right,
+            #E68E8E 0%, #E68E8E 16.66%,
+            #8EE6B7 16.66%, #8EE6B7 33.32%,
+            #8EC9E6 33.32%, #8EC9E6 49.98%,
+            #E6E38E 49.98%, #E6E38E 66.64%,
+            #E68E8E 66.64%, #E68E8E 83.30%,
+            #8EC9E6 83.30%, #8EC9E6 100%
+        );
+}
+
+        .content-overlay-box {
+            /* REMOVE position: absolute, top, left, transform */
+            width: 85%; /* Or whatever width you need */
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 25px;
+             position: relative;
+              z-index: 10;
+             /* Combined padding-left and padding-right */
+            /* z-index: 10; /* Not needed if not overlapping with other flex items in a complex way */
+            /* text-align: center; /* If you want text inside centered */
+        }
+
+            .experience-box {
+            background-color: #E3D99A;
+            padding: 20px;
+            min-height: 200px;
+            max-width: 750px; /* Good for readability */
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            position: relative; /* Still good practice if other absolute elements might appear */
+            display: flex;
+            justify-content: center; /* Horizontally centers flex items */
+            align-items: center;    /* Vertically centers flex items */
+            /* min-height: 300px; /* Optional: give the green box a minimum height */
+                }
+
+
+
+
+
+
+
+
+
+                /* collapsable styles */
+
+                        /* Styles specific to this example */
+        .image-expander {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden; /* Important for the max-height transition */
+        }
+
+        .image-expander-checkbox {
+            display: none; /* Hide the actual checkbox */
+        }
+
+        .image-expander-label {
+            display: flex; /* Align image and any text nicely */
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .image-expander-label:hover {
+            background-color: #e0e0e0;
+        }
+
+        .image-expander-label img {
+            margin-right: 10px; /* Space between image and any potential text */
+            display: block; /* Good practice for images in labels */
+        }
+
+        .image-expander-content {
+            max-height: 0;
+            overflow: hidden;
+            background-color: #f9f9f9;
+            transition: max-height 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), /* Custom timing for a bit of bounce */
+                        padding 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            /* No padding when collapsed */
+        }
+
+        /* When the checkbox is checked (label is clicked) */
+        .image-expander-checkbox:checked + .image-expander-label + .image-expander-content {
+            max-height: 9000px; /* EXPANDED: Adjust to a value larger than your expected content height */
+            padding: 15px;    /* Add padding when open */
+        }
+
+        /* Optional: Style for the label when expanded */
+        .image-expander-checkbox:checked + .image-expander-label {
+            background-color: #d0d0d0;
+            max-height: 9000px;
+        }
+
+        /* ADD THIS RULE if it's missing or ensure it's correct */
+        /* This rotates ONLY the image with class .tire-image-to-rotate INSIDE the checked label */
+        .image-expander-checkbox:checked + .image-expander-label .tire-image-to-rotate {
+            transform: rotate(180deg);
+        }
+
+        /* Specific styles for the tire image that needs to rotate */
+        .tire-image-to-rotate {
+            transition: transform 0.4s ease-in-out; /* Add transition for the transform property */
+            /* Adjust duration (0.4s) and timing function (ease-in-out) as desired */
+        }
