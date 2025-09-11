@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ai Questions Game</title>
+    <style>
+        html {
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex; 
+            flex-direction: column; 
+            background-color: transparent !important;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+
+        .game-wrapper {
+            width: 100%; 
+            flex-grow: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #444444 !important; /* Dark gray for wrapper debug - KEEP THIS FOR NOW */
+            padding: 5px; 
+            box-sizing: border-box;
+        }
+
+        #gameArea {
+            width: 90%;  
+            height: 90%; 
+            background-color: #000000; /* Changed from RED !important to black (or original game color) */
+            border: 3px solid #1e8339;   /* Original game border, removed !important */
+            display: block;
+            user-select: none;
+            touch-action: none;
+            box-sizing: border-box;
+        }
+
+        /* Other existing styles for overlays, buttons, etc. */
+        h1 {
+            text-align: center;
+        }
+        #gameArea text {
+            pointer-events: none;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .score-splat {
+            position: fixed;
+            font-family: Impact, sans-serif;
+            font-size: 24px;
+            color: orange;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.5s ease-out;
+            z-index: 1000;
+        }
+        .score-splat.show {
+            opacity: 1;
+            transform: translateY(-50px);
+        }
+        .game-controls-overlay.visible {
+            display: flex; 
+        }
+        .game-controls-overlay {
+            position: absolute;
+            top: 2%;
+            left: 92%;
+            z-index: 9999 !important;
+            transform: translateX(-15%);
+            background-color: rgba(65, 120, 56, 0.59);
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+        }
+        .game-controls-overlay button {
+            padding: 5px 10px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .game-controls-overlay button:hover {
+            background-color: #444;
+        }
+        .pause-menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .content-box h2 { 
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .screen-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+        }
+        #welcomeScreenOverlay {
+            z-index: 10; 
+        }
+        .content-box {
+            background-color: #333; 
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            max-width: 80%; 
+            width: 300px; 
+            z-index: 11; 
+        }
+        .content-box h1 { 
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 2.5em; 
+        }
+        .content-box p { 
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+        .content-box button {
+            display: block; 
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            border: 1px solid #777;
+            border-radius: 5px; 
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out; 
+        }
+        .content-box button:hover {
+            background-color: #666; 
+        }
+        .content-box button:last-child {
+            margin-bottom: 0;
+        }
+        #pauseMenuOverlay {
+            background-color: rgba(0, 0, 0, 0.7); 
+            z-index: 20; 
+        }
+        .settings-overlay {
+            position: fixed;
+            inset: 0; 
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .settings-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .settings-panel {
+            background-color: #333; 
+            color: #eee;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+            width: 75vw; 
+            max-width: 800px; 
+            max-height: 75vh; 
+            overflow-y: auto; 
+            scrollbar-width: thin; 
+            scrollbar-color: #888 #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #555;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .settings-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+        #closeSettingsButton {
+            background: none;
+            border: none;
+            color: #eee;
+            font-size: 1.8em;
+            cursor: pointer;
+        }
+        .settings-content {
+            flex-grow: 1; 
+        }
+        .setting-item {
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 5px;
+        }
+        .setting-item label {
+            margin-right: 10px;
+            flex-basis: 120px; 
+            flex-shrink: 0;
+        }
+        .setting-item input[type="text"],
+        .setting-item input[type="range"],
+        .setting-item select {
+            flex-grow: 1; 
+            min-width: 150px; 
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #555;
+            color: #eee;
+        }
+        .setting-item input[type="range"] {
+            flex-basis: calc(100% - 60px); 
+        }
+        .setting-item span { 
+            margin-left: 10px;
+            flex-basis: 50px; 
+            text-align: right;
+        }
+        .settings-footer {
+            border-top: 1px solid #555;
+            padding-top: 15px;
+            margin-top: 15px;
+            text-align: right;
+        }
+        #saveSettingsButton {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #saveSettingsButton:hover {
+            background-color: #0056b3;
+        }
+        @media (orientation: landscape) and (max-height: 500px) { 
+            .settings-panel {
+                width: 70vw;
+                max-width: 700px; 
+                max-height: 75vh; 
+            }
+            .settings-overlay {
+                align-items: flex-start;
+                padding-top: 20px; 
+                padding-bottom: 20px; 
+            }
+        }
+        @media (min-width: 768px) { 
+            .settings-panel {
+                width: 60vw;
+                max-width: 600px;
+            }
+        }
+        .toggle {
+            position: absolute;
+            cursor: pointer;
+            opacity: 0;
+        }
+        .toggle + label {
+            --toggle-color: #FFF;
+            --toggle-bg-color: #C6D0CC;
+            position: relative;
+            padding-left: 5rem;
+            line-height: 2.5rem;
+            cursor: pointer;
+        }
+        .toggle + label:before {
+            content: "";
+            box-sizing: border-box;
+            position: absolute;
+            left: 0;
+            width: 4.5rem;
+            height: 2.5rem;
+            border: 1px solid var(--toggle-color);
+            border-radius: 1.25rem;
+            background-color: var(--toggle-bg-color);
+            transition: background-color 200ms;
+        }
+        .toggle + label:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0.25rem;
+            width: 2rem;
+            height: 2rem;
+            margin: auto;
+            transform: translate(0, 0);
+            border-radius: 50%;
+            background-color: var(--toggle-color);
+            cursor: pointer;
+            transition: transform 200ms;
+        }
+        .toggle:checked + label {
+            --toggle-color: #FFFFFF;
+            --toggle-bg-color: #20b776;
+        }
+        .toggle:checked + label:after {
+            transform: translate(2rem, 0);
+        }
+        #welcomeBackgroundImageContainer {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100vw; 
+            height: 100vh; 
+            overflow: hidden; 
+            z-index: 1; 
+        }
+        #welcomeBackgroundImageContainer img {
+            width: 100%;    
+            height: 100%;   
+            object-fit: contain; 
+            object-position: center center; 
+        }
+    </style>
+</head>
+<body>
+
+    <div id="gameWrapper" class="game-wrapper">
+        <div id="loadingMessage" style="display: none;">Loading game assets...</div>
+        <div id="gameLoadError" style="display: none; color: red;"></div>
+
+        <canvas id="gameArea" ></canvas>
+    </div>
+
+        <div id="gameControlsOverlay" class="game-controls-overlay" style="display: flex;">
+            <button id="pauseButton">Pause</button>
+        </div>
+
+        <div id="pauseMenuOverlay" class="pause-menu-overlay" style="display: none;">
+            <div class="content-box"> <!-- Changed class here -->
+                <h2>Paused</h2>
+                <button id="resumeButton">Resume</button>
+                <button id="settingsButton">Settings (Example)</button>
+                <button id="quitToMenuButton">Quit to Menu (Example)</button>
+            </div>
+        </div>
+
+    <div id="settingsOverlay" class="settings-overlay">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <h2>Game Settings</h2>
+                <button id="closeSettingsButton">&times;</button>
+            </div>
+            <div class="settings-content"> 
+                <div class="setting-item">
+                    <label for="playerName">Player Name:</label>
+                    <input type="text" id="playerName" name="playerName">
+                </div>
+                <div class="setting-item">
+                    <label for="soundVolume">Sound Volume:</label>
+                    <input type="range" id="soundVolume" name="soundVolume" min="0" max="1" step="0.01">
+                    <span id="soundVolumeValue">50%</span>
+                </div>
+                <div class="setting-item">
+                    <label for="musicVolume">Music Volume:</label>
+                    <input type="range" id="musicVolume" name="musicVolume" min="0" max="1" step="0.01">
+                    <span id="musicVolumeValue">50%</span>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" class="toggle" id="rotation-lock" name="rotation-lock">
+                    <label for="rotation-lock">Rotation: 🔒</label>
+                </div>
+            </div>
+            <div class="settings-footer">
+                <button id="saveSettingsButton">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="gameOverSound" src="/sounds/gameOver.wav"></audio>
+    <script type="module" src="/main.js"></script>
+</body>
+
+</html>

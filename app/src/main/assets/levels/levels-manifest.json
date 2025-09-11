@@ -1,0 +1,24 @@
+{
+  "totalLevels": 3,
+  "defaultStartLevel": "level1.json",
+  "levels": [
+    {
+      "id": "level1",
+      "fileName": "level1.json",
+      "displayName": "Pickle Patch Panic",
+      "difficulty": "easy"
+    },
+    {
+      "id": "level2",
+      "fileName": "level2.json",
+      "displayName": "Cucumber Caverns",
+      "difficulty": "medium"
+    },
+    {
+      "id": "boss-level",
+      "fileName": "boss-level.json",
+      "displayName": "The Final Pickle",
+      "difficulty": "hard"
+    }
+  ]
+}

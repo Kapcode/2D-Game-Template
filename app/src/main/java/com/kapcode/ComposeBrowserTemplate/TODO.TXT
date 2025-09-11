@@ -1,0 +1,137 @@
+
+
+
+WORKFLOW OF Animation and UI Changes
+
+    Must be done After Content is Added, Edited, or Deleted.
+
+    Can Be Done Using JavaScript, Using GIF, or Using Animated Vector Drawables in Kotlin Code.
+
+    Must be Page Aware If It Is In Kotlin Code.
+
+    Is Already Page Aware If In HTML/CSS/JavaScript
+
+
+
+
+
+Write My Story Of My Experience Creating  LearnWithAi: Using Gemini and Copilot, and Google Docs.
+
+Compare what happened and what I expected.
+
+Organize My Story Into Docs and HTML.
+
+That Goes Into The Lessons, and tips.
+
+Do More Research On the topic.
+
+
+
+
+
+
+
+
+
+explain that it gave me assurance that my approach was a good one, but had some Ideas to add ad the end witch is great.
+
+
+•User-Centric: These guidelines are deeply user-centric, focusing entirely on making the experience better for the reader/learner.
+•Actionable: They are clear, concise, and provide concrete actions for the writer.
+•Effective for Learning: Following these principles will likely lead to content that is not only understood but also enjoyed and retained better.
+•Widely Applicable: While targeted for a younger audience, many of these principles (especially clarity, conciseness, visual appeal, and a non-prescriptive tone) are beneficial for almost any audience.
+
+
+CODING BUGS TO FIX.... Now that I have a hang of kotlin and compose xd :)
+
+swiping to forward past the end gives soft error message to user.
+
+Swiping Back is not possible, it won't work. .... FIXED
+
+
+... extra.. well essential... learn how to use remmeber.. its in yuour code, you should know exactly what it does.
+
+
+
+
+adb
+connection
+
+C:\Users\prospet0\AppData\Local\Android\Sdk\platform-tools\adb.exe kill-server
+C:\Users\prospet0\AppData\Local\Android\Sdk\platform-tools\adb.exe start-server
+C:\Users\prospet0\AppData\Local\Android\Sdk\platform-tools\adb.exe tcip 5555
+C:\Users\prospet0\AppData\Local\Android\Sdk\platform-tools\adb.exe -s 192.168.1.128:5555 shell
+
+
+run adb tcip  Did you previously run adb tcpip <port> while ..... trial and error, you will get it
+
+C:\Users\prospet0\AppData\Local\Android\Sdk\platform-tools\adb.exe tcpip 46609
+C:\Users\prospet0\AppData\Local\Android\Sdk\platform-tools\adb.exe connect 192.168.1.244:46609
+
+
+
+STAY AWAY FROM USING COMPANY COLORS
+
+
+
+//TODO RE READ THIS,, GO OVER IT
+if (htmlFiles.isNotEmpty() && currentFileIndex in htmlFiles.indices) {
+    Log.d("HtmlViewerLayout", "Displaying HtmlAssetView for ${htmlFiles[currentFileIndex]}")
+    key(htmlFiles[currentFileIndex]) {
+    LINE 307
+    }
+
+
+
+
+
+Collapsable sections.
+
+
+
+
+
+
+STOP BUTTON
+
+Pause / resume slighly out of sync..
+
+style and colors
+
+word list/ question lists
+
+finish writing
+
+
+//todo LEVEL MANIFEST LOADING CHANGE TO Option B (Slightly More Complex): Load the level manifest concurrently with other assets if your assetManager can be extended to handle different types of "assets" (like JSON data files for the manifest). This might be overkill initially.
+
+//.todo so that is going in my todo file, update assets to neat sizes. 64X64 24X24 and so on
+
+can you do a quick transformation from raw text to  html document with strong tags and br tags, and just very simple <p> tags, some listing tags <ol <ul> <li>, and <h1> tags  for the following text, I will format and customize mutch more witrh css and animations, fonts and all that soon after, please no added css styling: To be clear, I dont want the content of the text changed, Just it to be organized into the tags, formated into them, in a simple way, I will do the refining.     text =
+
+
+
+const assetsManifest = [
+        { key: globals.MASTER_SPRITE_SHEET_KEY, type: 'masterSpriteSheet', jsonPath: globals.SPRITE_SHEET_JSON_PATH, imagePath: globals.SPRITE_SHEET_PATH },
+        // Added background images
+        {
+            key: 'bg_sky_calm',
+            type: 'image',
+            path: 'assets/images/backgrounds/sky_calm.png'
+        },
+        {
+            key: 'bg_mountains_distant',
+            type: 'image',
+            path: 'assets/images/backgrounds/mountains_distant.png'
+        },
+        {
+            key: 'bg_forest_close',
+            type: 'image',
+            path: 'assets/images/backgrounds/forest_close.png'
+        },
+        {
+            key: 'bg_clouds_fast',
+            type: 'image',
+            path: 'assets/images/backgrounds/clouds_fast.png'
+        }
+    ];

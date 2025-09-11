@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ai Questions Game</title>
+    <style>
+        .svg-container {
+            border: 1px solid #444444;
+            width: 800px;
+            height: 800px;
+            overflow: visible;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-width: 100%;
+            min-height: 100%;
+            overflow: hidden;
+            /* Important to prevent scrollbars if the game container is exactly screen size */
+            background-color: #222;
+            /* Optional: color for area outside the game on wider screens */
+        }
+
+        h1 {
+            /* Basic styling for the heading */
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-wrapper {
+            overflow: hidden;
+            min-width: 408px;
+            min-height: 718px;
+            width: 100vw;
+            /* Take full viewport width */
+            height: 100vh;
+            /* Take full viewport height */
+            display: flex;
+            border: #00ff00;
+            border-style: solid;
+            padding: 5px;
+            /* Optional: padding around the game area */
+            border-width: 1px;
+            justify-content: center;
+            /* Center SVG horizontally if it doesn't fill the width */
+            align-items: center;
+            background-color: #444;
+            /* Optional: color for the game area */
+        }
+
+        .game-aspect-ratio-box {
+            width: 100%;
+            /* Fill the game-wrapper */
+            height: 100%;
+            /* Fill the game-wrapper */
+            display: flex;
+            /* This will center the SVG */
+            justify-content: center;
+            align-items: center;
+            border: #ffd900;
+            border-style: solid;
+            border-width: 1px;
+        }
+
+        #gameArea {
+            /* This is your SVG */
+            display: block;
+            user-select: none;
+            touch-action: none;
+            /* Prevent default touch actions like scrolling */
+            /* Border styles */
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            background-color: #444;
+            border-color: #ff0080;
+            /* Or any color you like, e.g., limegreen, red */
+            border-style: solid;
+            /* Or dashed, dotted, etc. */
+            border-width: 3px;
+        }
+
+        #gameArea text {
+            pointer-events: none;
+        }
+
+        button {
+            /* Basic button styling */
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        .score-splat {
+            position: fixed;
+            font-family: Impact, sans-serif;
+            font-size: 24px;
+            color: orange;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.5s ease-out;
+            z-index: 1000;
+        }
+
+        .score-splat.show {
+            opacity: 1;
+            transform: translateY(-50px);
+        }
+
+        .game-controls-overlay {
+            position: absolute;
+            visibility: hidden;
+            top: 10px;
+            /* Distance from the top of .game-wrapper */
+            left: 50%;
+            /* Start the left edge of the overlay at the horizontal center of .game-wrapper */
+            transform: translateX(-15%);
+            /* Shift the overlay left by half of its OWN width to perfectly center it */
+            z-index: 100;
+            /* Ensure it's above other elements like the SVG */
+
+            /* For styling - adjust as needed */
+            background-color: rgba(0, 0, 0, 0.5);
+            /* Semi-transparent background */
+            padding: 8px 15px;
+            border-radius: 8px;
+            display: flex;
+            /* To lay out buttons inside side-by-side */
+            gap: 10px;
+            /* Space between buttons */
+        }
+
+        .game-controls-overlay button {
+            /* Basic button styling - adjust as needed */
+            padding: 5px 10px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .game-controls-overlay button:hover {
+            background-color: #444;
+        }
+
+        /* Styling for the Pause Menu Overlay */
+        .pause-menu-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            /* Semi-transparent dark background */
+            z-index: 20;
+            /* Higher z-index to be on top of game controls if they are separate */
+            display: flex;
+            /* For centering the content */
+            justify-content: center;
+            align-items: center;
+            /* display: none; /* Initially hidden - handled by JS or inline style */
+        }
+
+        .pause-menu-content {
+            background-color: #333;
+            /* Darker background for the menu box */
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .pause-menu-content h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .pause-menu-content button {
+            display: block;
+            /* Stack buttons vertically */
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            /* Add your button styling */
+            background-color: #555;
+            color: white;
+            border: 1px solid #777;
+            cursor: pointer;
+        }
+
+        .pause-menu-content button:last-child {
+            margin-bottom: 0;
+        }
+
+            /* General styling for full-screen overlays (like welcome and pause) */
+    .screen-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex; /* For centering the content box */
+        justify-content: center;
+        align-items: center;
+        /* display: none; /* Initially hidden - handled by JS or inline style */
+    }
+
+    /* Specific for the Welcome Screen Overlay */
+    #welcomeScreenOverlay {
+        z-index: 10; /* Ensure it's above the background but potentially below other things if needed */
+        /* No background-color here if you want the body/backgroundImageContainer to show through */
+    }
+
+    /* Reusable style for the content boxes (welcome, pause, game over) */
+    .content-box {
+        background-color: #333; /* Darker background for the menu box */
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        max-width: 80%; /* Prevent it from getting too wide on large screens */
+        width: 300px; /* Or a specific width */
+        z-index: 11; /* Ensure content box is above its own overlay's pseudo-elements if any */
+    }
+
+    .content-box h1 { /* Specific for welcome screen title */
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 2.5em; /* Larger title */
+    }
+
+    .content-box h2 { /* For pause menu title */
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    .content-box p { /* For tagline or other text */
+        margin-bottom: 25px;
+        font-size: 1.1em;
+    }
+
+    .content-box button {
+        display: block; /* Stack buttons vertically */
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 10px;
+        font-size: 16px;
+        background-color: #555;
+        color: white;
+        border: 1px solid #777;
+        border-radius: 5px; /* Added for slightly softer buttons */
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out; /* Smooth hover effect */
+    }
+
+    .content-box button:hover {
+        background-color: #666; /* Slightly lighter on hover */
+    }
+
+    .content-box button:last-child {
+        margin-bottom: 0;
+    }
+
+
+    /* --- Styling for the Pause Menu (using some shared classes) --- */
+    #pauseMenuOverlay {
+        background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent dark background for pause */
+        z-index: 20; /* Higher z-index to be on top of game controls and game canvas */
+    }
+    /* .pause-menu-content class is now covered by .content-box */
+
+
+    /* --- Settings Overlay Styles (adapted) --- */
+
+/* Ensure .screen-overlay is suitable for modal popups if it wasn't already */
+/* If .screen-overlay already has a background, you might want to adjust it or
+   ensure the .settings-content box is opaque enough.
+   This rule assumes .screen-overlay might be used for other full-screen messages too.
+*/
+#settingsOverlay {
+    background-color: rgba(0, 0, 0, 0.8); /* Slightly darker overlay background */
+    z-index: 1000; /* High z-index to be on top */
+    /* .hidden class will be toggled by JS */
+}
+
+#settingsOverlay.hidden {
+    display: none; /* Simpler hide/show, or use opacity/visibility like before if you prefer transitions */
+}
+
+
+/* Re-using .content-box as the base for the settings panel */
+.settings-content { /* Extends/modifies .content-box for settings specifics */
+    /* .content-box already provides background-color: #333, padding, border-radius, color: white, box-shadow */
+    width: 90%; /* Responsive width */
+    max-width: 450px; /* Max width */
+    border: 2px solid #ffd900; /* Yellow accent border, matching your style */
+}
+
+.settings-content h2 {
+    /* .content-box h2 styling might already be good, adjust if needed */
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-family: Impact, sans-serif; /* Using Impact like score-splat for headings */
+    color: #ffd900; /* Yellow accent for the title */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+}
+
+.setting-item {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.setting-item label {
+    flex-basis: 130px; /* Adjust as needed */
+    margin-right: 15px;
+    color: #f0f0f0; /* Light gray for readability on dark background */
+    font-family: Verdana, sans-serif; /* Consistent with score display */
+    font-size: 1em;
+}
+
+/* Styling for input elements to match the dark theme */
+.setting-item input[type="range"],
+.setting-item input[type="text"],
+.setting-item select {
+    flex-grow: 1;
+    padding: 8px 10px;
+    background-color: #555; /* Darker background for inputs */
+    color: #f0f0f0; /* Light text color */
+    border: 1px solid #777; /* Border similar to buttons */
+    border-radius: 5px; /* Consistent border-radius */
+    box-sizing: border-box;
+    font-family: Verdana, sans-serif;
+    font-size: 0.9em;
+}
+
+.setting-item input[type="text"]::placeholder { /* Style placeholder text */
+    color: #aaa;
+    opacity: 1; /* Override browser defaults */
+}
+
+.setting-item select option {
+    background-color: #555;
+    color: #f0f0f0;
+}
+
+
+/* Custom styling for range inputs (sliders) can be tricky and browser-specific
+   Here's a basic attempt to make them fit the dark theme better.
+   You might need to use more specific pseudo-elements for deeper customization.
+*/
+.setting-item input[type="range"] {
+    -webkit-appearance: none; /* Override default appearance */
+    appearance: none;
+    height: 8px; /* Track height */
+    background: #444; /* Track color */
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #ffd900; /* Thumb color - yellow accent */
+    border-radius: 50%;
+    border: 2px solid #333; /* Border for the thumb */
+    cursor: pointer;
+}
+
+.setting-item input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    background: #ffd900;
+    border-radius: 50%;
+    border: 2px solid #333;
+    cursor: pointer;
+}
+
+
+.setting-item .volume-value { /* For displaying volume percentage */
+    margin-left: 10px;
+    min-width: 45px;
+    color: #f0f0f0;
+    font-family: Verdana, sans-serif;
+    font-size: 0.9em;
+}
+
+.settings-buttons {
+    margin-top: 30px;
+    text-align: center; /* Center the buttons */
+    display: flex;
+    justify-content: space-around; /* Space out buttons */
+    flex-wrap: wrap; /* Wrap if not enough space */
+    gap: 10px; /* Space between buttons if they wrap */
+}
+
+/* Re-using .content-box button style as a base for settings action buttons */
+.settings-action-button {
+    /* Inherits from .content-box button:
+       display: block; width: 100%; padding: 12px; margin-bottom: 10px;
+       font-size: 16px; background-color: #555; color: white;
+       border: 1px solid #777; border-radius: 5px; cursor: pointer;
+       transition: background-color 0.2s ease-in-out;
+    */
+    width: auto; /* Override width: 100% to allow side-by-side */
+    flex-grow: 1; /* Allow buttons to grow and share space */
+    max-width: 180px; /* Max width per button */
+    margin-bottom: 0; /* Remove bottom margin if using flex gap */
+    padding: 10px 15px; /* Slightly adjust padding if needed */
+}
+
+.settings-action-button:hover {
+    background-color: #6E6E6E; /* Slightly lighter gray on hover */
+    border-color: #999;
+}
+
+.settings-action-button.reset-button {
+    background-color: #d9534f; /* A reddish color for reset/danger */
+    border-color: #c9302c;
+}
+
+.settings-action-button.reset-button:hover {
+    background-color: #c9302c;
+    border-color: #ac2925;
+}
+
+
+/* Responsive adjustments if needed */
+@media (max-width: 480px) {
+    .settings-content {
+        padding: 20px 15px; /* Slightly less padding on small screens */
+    }
+
+    .setting-item label {
+        flex-basis: 100%; /* Labels take full width */
+        margin-bottom: 8px;
+        text-align: left;
+    }
+
+    .setting-item input[type="range"],
+    .setting-item input[type="text"],
+    .setting-item select,
+    .setting-item .volume-value {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .setting-item .volume-value {
+        text-align: right;
+        margin-top: 5px;
+    }
+
+    .settings-buttons {
+        flex-direction: column; /* Stack buttons vertically */
+        align-items: center;
+    }
+    .settings-action-button {
+        width: 100%; /* Full width when stacked */
+        margin-bottom: 10px; /* Add margin back for stacked buttons */
+    }
+    .settings-action-button:last-child {
+        margin-bottom: 0;
+    }
+}
+
+
+
+
+#welcomeBackgroundImageContainer {
+    position: fixed; /* Or 'absolute' if relative to a specific parent that is not the viewport */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full viewport width */
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Hide parts of the image that go outside this container if using 'cover' */
+    z-index: 1; /* Ensure it's behind other content like welcomeScreenOverlay */
+}
+
+#welcomeBackgroundImageContainer img {
+    width: 100%;    /* Make image fill the container's width */
+    height: 100%;   /* Make image fill the container's height */
+    object-fit: contain; /* This is key:cover
+                          - Scales the image to maintain its aspect ratio while filling the element's entire content box.
+                          - If the image's aspect ratio does not match the aspect ratio of its box,
+                            then the object will be clipped to fit.
+                          - Alternatives:
+                            - 'contain': Scales the image to fit within the content box, might leave empty space (letterboxing).
+                            - 'fill': Stretches the image to fill the content box, ignoring aspect ratio (can distort).
+                            - 'scale-down': Displays the image as if 'none' or 'contain' would be chosen,
+                                            whichever would result in a smaller concrete object size.
+                        */
+    object-position: center center; /* Centers the image within its box, similar to background-position */
+}
+
+/* ... rest of your screen-overlay and content-box CSS ... */
+
+/* Ensure the body doesn't have conflicting background or overflow issues */
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw; /* Use viewport units to fill width */
+    height: 100vh; /* Use viewport units to fill height */
+    overflow: hidden; /* CRITICAL: Prevents scrollbars and panning of the body itself */
+    box-sizing: border-box;
+    /* Important for games: ensure the browser doesn't try to do things like "pull-to-refresh"
+       or other default touch actions if your game handles all touch. */
+    touch-action: none;
+
+    /* REMOVE any background-image properties from 'body' if you use #backgroundImageContainer for the image */
+}
+
+
+
+    </style>
+</head>
+
+<body>
+
+    <div class="game-wrapper">
+        <div class="game-aspect-ratio-box">
+            <!-- aspect ratio is that of a mobile screen 720 1280, scaled down-->
+            <svg id="gameArea" viewBox="0 0 404 718" preserveAspectRatio="xMidYMid meet" >
+                <defs>
+
+                    <!-- new background defs -->
+                    <linearGradient id="b">
+                        <stop offset=".023" stop-color="#d70e4d" />
+                        <stop offset=".097" stop-color="#2088c8" stop-opacity=".7" />
+                        <stop offset=".9" stop-color="#2087c9" stop-opacity=".697" />
+                        <stop offset=".97" stop-color="#00ffc5" />
+                    </linearGradient>
+                    <linearGradient id="a">
+                        <stop offset="0" stop-color="#d70e4d" />
+                        <stop offset="1" stop-color="#00ffc5" />
+                    </linearGradient>
+                    <linearGradient xlink:href="#a" id="d" x1="-.133" x2="100.329" y1="7.938" y2="7.938"
+                        gradientTransform="matrix(.99121 0 0 3.21203 .448 -.562)" gradientUnits="userSpaceOnUse" />
+                    <linearGradient xlink:href="#b" id="c" x1=".212" x2="100.543" y1="7.938" y2="7.938"
+                        gradientTransform="matrix(.99254 0 0 3.12859 .105 .1)" gradientUnits="userSpaceOnUse" />
+
+                    <!-- Score and splat Templates (can still be useful) -->
+                    <text id="scoreDisplayTemplate" x="10" y="30" font-family="Verdana" font-size="24" stroke="white"
+                        stroke-width=".5" fill="orange" font-weight="bold">Score: 0</text>
+
+                </defs>
+
+                <!-- Game elements will be added here by JavaScript -->
+                <!-- We'll create <use> for backgrounds and <text> for words dynamically -->
+
+                <!-- Score and splat Instances -->
+                <use id="scoreDisplay" href="#scoreDisplayTemplate" />
+
+
+            </svg>
+            <canvas id="gameCanvas" style="display: block;"></canvas> <
+        </div>
+          <!-- Pause/Stop Button Overlay (directly inside game-wrapper) -->
+        <div id="gameControlsOverlay" class="game-controls-overlay">
+            <button id="pauseButton">Pause</button>
+            
+            <!-- Add other controls if needed -->
+        </div>
+        <!-- Welcome Screen Overlay (initially hidden) -->
+         <div id="welcomeBackgroundImageContainer">
+        <!-- This is where your background image will be set,
+             or you could set it on the body or a specific wrapper div -->
+             <img src="/images/NiceBurgerTruckSvg.svg" alt="2d_pickle_rocket_wit_straight" >
+    
+
+            <div id="welcomeScreenOverlay" class="screen-overlay">
+                <div class="welcome-content content-box">
+                    <h1>Game Title</h1>
+                    <p>A short, catchy tagline!</p>
+                    <button id="startGameButton">Start Game</button>
+                    <button id="settingsButtonWelcome">Settings</button>
+                    <button id="highScoresButton">High Scores</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pause Menu Overlay (initially hidden) -->
+        <div id="pauseMenuOverlay" class="pause-menu-overlay" style="display: none;">
+            <div class="pause-menu-content">
+                <h2>Paused</h2>
+                <button id="resumeButton">Resume</button>
+                <button id="settingsButton">Settings (Example)</button>
+                <button id="quitToMenuButton">Quit to Menu (Example)</button>
+            </div>
+        </div>
+
+
+
+        <!-- Settings Overlay (initially hidden) -->  <!-- Settings Overlay -->
+    <div id="settingsOverlay" class="screen-overlay hidden"> <!-- Re-using .screen-overlay for consistency -->
+        <div class="content-box settings-content"> <!-- Re-using .content-box -->
+            <h2>Game Settings</h2>
+
+            <div class="setting-item">
+                <label for="soundVolume">Sound Volume:</label>
+                <input type="range" id="soundVolume" name="soundVolume" min="0" max="1" step="0.01">
+                <span id="soundVolumeValue" class="volume-value">75%</span>
+            </div>
+
+            <div class="setting-item">
+                <label for="musicVolume">Music Volume:</label>
+                <input type="range" id="musicVolume" name="musicVolume" min="0" max="1" step="0.01">
+                <span id="musicVolumeValue" class="volume-value">50%</span>
+            </div>
+
+            <div class="setting-item">
+                <label for="difficulty">Difficulty:</label>
+                <select id="difficulty" name="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="normal">Normal</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+
+             <div class="setting-item">
+                <label for="playerName">Player Name:</label>
+                <input type="text" id="playerName" name="playerName" placeholder="Enter name">
+            </div>
+
+            <div class="settings-buttons">
+                <button id="closeSettingsButton" class="settings-action-button">Close & Save</button>
+                <button id="resetSettingsButton" class="settings-action-button reset-button">Reset</button>
+            </div>
+        </div>
+    </div>
+
+
+    
+    </div>
+    <!--load in sounds before script-->>
+    <audio id="gameOverSound" src="/sounds/gameOver.wav"></audio>
+    <script type="module" src="/audioManagement.js"></script>
+    <script type="module" src="/settingsManagement.js"></script>
+    <script type="module" src="/main.js"></script>
+</body>
+
+</html>
