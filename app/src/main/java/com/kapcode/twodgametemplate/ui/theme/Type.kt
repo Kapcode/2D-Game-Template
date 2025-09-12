@@ -1,4 +1,4 @@
-package com.kapcode.composebrowsertemplate.ui.theme // Changed package name to lowercase
+package com.kapcode.twodgametemplate.ui.theme // Changed package name to lowercase
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
