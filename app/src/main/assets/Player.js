@@ -9,7 +9,7 @@ export class Player extends Character {
             offsetX: 8,
             offsetY: 10,
             applyGravity: true,
-            width: 50, 
+            width: 50,
             height: 86,
             jumpHeightInTileQuarters: 14 // NEW: Player's jump apex will be 1 tile high (4 * 1/4)
         };
@@ -53,24 +53,24 @@ export class Player extends Character {
 
         // 6. Handle Jump Input (uses the now definitive this.isGrounded)
         if (input.isActionActive('jump') && this.isGrounded && this.applyGravity) {
-            this.jump(); 
+            this.jump();
         }
-        
+
         // 7. Update Animations based on state (uses the latest isGrounded)
         if (!this.isGrounded && this.applyGravity) {
             if (this.velocityY < 0) {
-                this.setAnimation('pickle_player_jump'); 
+                this.setAnimation('pickle_player_jump');
             } else {
-                this.setAnimation('pickle_player_fall'); 
+                this.setAnimation('pickle_player_fall');
             }
-        } else { 
+        } else {
             if (dXInput !== 0) {
                 this.setAnimation('pickle_player_walk');
             } else {
                 this.setAnimation('pickle_player_idle');
             }
         }
-        
+
         if (dXInput > 0) this.facingDirection = 1;
         else if (dXInput < 0) this.facingDirection = -1;
 
@@ -81,4 +81,10 @@ export class Player extends Character {
     draw(ctx, camera) {
         super.draw(ctx, camera);
     }
+    jump() {
+        this.velocityY = -this.jumpStrength;
+    }
+    moveRight() { this.dXInput += 1;}
+    moveLeft() { this.dXInput -= 1;}
+
 }

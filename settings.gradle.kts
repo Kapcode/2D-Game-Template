@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Compose-Browser-Template"
+rootProject.name = "2D-Game-Template"
 include(":app")

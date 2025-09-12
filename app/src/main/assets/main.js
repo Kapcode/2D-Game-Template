@@ -1,6 +1,7 @@
 import * as globals from './globals.js';
 import { assetManager } from './AssetManager.js';
 import { LevelManager } from './LevelManager.js';
+import {isActionActive, actionStates } from './input.js';
 import * as input from './input.js';
 import { handleTilemapCollisions, getTileIdAtTileCoords, TILE_SIZE, TILE_PROPERTIES } from './tileMapManagement.js';
 import { setVolume, playPooledSound } from './audioManagement.js';
@@ -384,6 +385,21 @@ function drawWelcomeScreenUI(ctx) {
         });
     }
 }
+function playerInputHandlingTouch(){
+    // 1. Process Input
+    if (isActionActive('moveLeft')) {
+        player.moveLeft();
+    } else if (isActionActive('moveRight')) {
+        player.moveRight();
+    }
+
+    // For 'jump', since it's a single trigger:
+    // Option A: Directly modify actionStates (if exported and mutable from input.js)
+    if (isActionActive('jump')) {
+        player.jump();
+        actionStates['jump'] = false; // Reset after processing
+    }
+}
 
 function gameLoop(currentTimestamp) {
     if (!animationFrameId && !gameState.welcomeScreenActive && gameState.gameStopped) {
@@ -399,7 +415,7 @@ function gameLoop(currentTimestamp) {
         Logger.error("[gameLoop] ctx is not valid. Cannot clear or draw.");
         if (animationFrameId) animationFrameId = requestAnimationFrame(gameLoop); 
         return;
-    }
+    }playerInputHandlingTouch();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (gameState.welcomeScreenActive) {

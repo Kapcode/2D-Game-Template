@@ -12,14 +12,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ComposeBrowserTemplate"
+        android:theme="@style/Theme.twodgametemplate"
         tools:targetApi="31">
         <activity
-            android:name="com.kapcode.composebrowsertemplate.MainActivity" 
+            android:name="com.kapcode.twodgametemplate.MainActivity" 
             android:exported="true"
-            android:label="@string/app_name"
             android:screenOrientation="fullSensor"
-            android:theme="@style/Theme.ComposeBrowserTemplate">
+            android:theme="@style/Theme.twodgametemplate">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

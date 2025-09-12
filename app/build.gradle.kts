@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.kapcode.ComposeBrowserTemplate"
+    namespace = "com.kapcode.twodgametemplate"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.kapcode.learnwithai"
+        applicationId = "com.kapcode.twodgametemplate"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

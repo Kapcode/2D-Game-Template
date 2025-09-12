@@ -1,4 +1,4 @@
-package com.kapcode.composebrowsertemplate // Changed package name case
+package com.kapcode.twodgametemplate // Changed package name case
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -29,7 +29,7 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.compose.ui.platform.LocalContext
-import com.kapcode.composebrowsertemplate.ui.theme.LearnWithAiTheme // Corrected import
+import com.kapcode.twodgametemplate.ui.theme.LearnWithAiTheme // Corrected import
 import java.io.IOException
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableIntStateOf 
