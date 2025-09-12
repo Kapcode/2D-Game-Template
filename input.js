@@ -1,6 +1,8 @@
+import { Logger } from './logger.js';
+
 const keyStates = {};
 export const actionStates = {};
-
+let previousActionStates = {}; // Holds the previous frame's active actions for "just pressed" logic
 
 
 
@@ -71,10 +73,11 @@ function handlePointerDown(event) {
                 actionInProgress: 'jump_intent' // Mark intent
             };
             // For immediate feedback you could set jump true here, but usually jump on release (tap)
-            // actionStates['jump'] = true; // If jump on press
-            // Logger.debug('Input', `Potential jump pointer ${pointerId} down at (${x}, ${y})`);
+            //actionStates['jump'] = true; // If jump on press
+            Logger.debug('Input', `Potential jump pointer ${pointerId} down at (${x}, ${y})`);
+            console.log(`Potential jump pointer ${pointerId} down at (${x}, ${y})`);
         } else {
-            // Logger.debug('Input', `Ignored additional pointer ${pointerId} in jump area while another jump is pending.`);
+            Logger.debug('Input', `Ignored additional pointer ${pointerId} in jump area while another jump is pending.`);
         }
     }
 }
@@ -126,16 +129,15 @@ function handlePointerMove(event) {
             pointerInfo.actionInProgress = null;
         }
     } else if (pointerInfo.type === 'potential_jump') {
-        // If the finger drags too far, maybe it's not a jump anymore
         const dragDistance = Math.sqrt(
             Math.pow(pointerInfo.currentX - pointerInfo.startX, 2) +
             Math.pow(pointerInfo.currentY - pointerInfo.startY, 2)
         );
-        if (dragDistance > JOYSTICK_DEAD_ZONE * 1.5) { // If dragged significantly
-            // Logger.debug('Input', `Potential jump pointer ${pointerId} dragged too far. Cancelling jump intent.`);
-            if (pointerInfo.actionInProgress === 'jump_intent') {
-                // No actionState to set to false here unless jump was set on pointerdown
-            }
+        // Make this threshold much larger for taps, or even specific to a "swipe to cancel" feature if you had one
+        const JUMP_TAP_DRAG_CANCEL_THRESHOLD = JOYSTICK_DEAD_ZONE * 5; // Experiment with this value (e.g., 3, 4, 5 times dead zone)
+
+        if (dragDistance > JUMP_TAP_DRAG_CANCEL_THRESHOLD && pointerInfo.actionInProgress === 'jump_intent') {
+            console.log(`[Input Mobile DEBUG] P${pointerId} Jump intent CANCELLED for pointer ${pointerId} due to drag > ${JUMP_TAP_DRAG_CANCEL_THRESHOLD}.`);
             pointerInfo.actionInProgress = null; // Cancel jump intent
         }
     }
@@ -167,6 +169,7 @@ function handlePointerUpOrCancel(event) { // Combine up and cancel logic
     } else if (pointerInfo.type === 'potential_jump') {
         if (pointerInfo.actionInProgress === 'jump_intent') { // Was it still a valid jump intent?
             actionStates['jump'] = true; // JUMP ON RELEASE (TAP)
+            console.log(`[Input Mobile DEBUG] P${pointerId} Jump intent confirmed for pointer ${pointerId}.`);
             // Logger.debug('Input', `JUMP action triggered by pointer ${pointerId}!`);
             // Set jump to false after a short delay or in game loop if it's a "just pressed" event
             // For now, it will stay true until another input changes it, or game logic resets it.
@@ -324,7 +327,9 @@ export function isActionActive(actionName) {
 export function isKeyDown(keyName) {
     return !!keyStates[keyName.toLowerCase()];
 }
-
+export function isActionJustPressed(actionName) { // <<<< Ensure 'export' keyword is here
+    return !!actionStates[actionName] && !previousActionStates[actionName];
+}
 /**
  * (Advanced) Checks if an action was just pressed in this frame.
  * This requires a bit more state management (tracking previous frame's state).
@@ -348,7 +353,7 @@ export function initInput() {
     // Clear any previous states if re-initializing
     for (const key in keyStates) delete keyStates[key];
     for (const key in actionStates) delete actionStates[key];
-
+    previousActionStates = {};
     // Clear any previous states
     for (const key in keyStates) delete keyStates[key];
     for (const key in actionStates) delete actionStates[key]; // Reset all actions
@@ -394,6 +399,45 @@ export function removeInputListeners() {
     window.removeEventListener('keyup', handleKeyUp);
     console.log("Input system listeners removed.");
     console.log("Input system listeners (dynamic touch) removed.");
+}
+/**
+ * Call this function at the VERY END of your game loop, after all updates and rendering.
+ * It copies the current actionStates to previousActionStates for the next frame's
+ * isActionJustPressed logic.
+ */
+export function updateInputFrameEnd() { //when i release prosses an action on release... i need to reset value.
+    // Shallow copy is usually fine for a flat object of booleans/simple values
+    previousActionStates = { ...actionStates };
+
+
+
+    if (actionStates['jump']) {
+        actionStates['jump'] = false;
+        // This makes actionStates['jump'] false *before* the next call to isActionJustPressed
+        // in the *next* game frame, assuming no new jump input happens to set it true again.
+    }
+    // IMPORTANT: For actions that should only trigger once per press (like 'jump'
+    // if you are using 'isActionJustPressed'), you might need to clear them
+    // from actionStates here IF they are not automatically cleared by a keyUp/pointerUp event
+    // that sets them to false.
+    //
+    // If a 'jump' action is set to true on keydown/pointerup and never set to false by
+    // a corresponding keyup/pointer-no-longer-active event, then using only
+    // isActionJustPressed will work for one frame, but actionStates['jump'] will remain true.
+    // This is generally fine if only isActionJustPressed('jump') is checked by game logic.
+    //
+    // However, if you want actionStates['jump'] to truly reflect only the *moment* of the press
+    // and then be false, you could do:
+    // if (actionStates['jump'] && previousActionStates['jump']) { // If it was pressed this frame and last (meaning it was just caught by isActionJustPressed)
+    //     actionStates['jump'] = false; // Option to clear it for the next frame
+    // }
+    // A simpler way: If 'jump' is set true by an event, isActionJustPressed consumes it.
+    // The Player's handleInput calls player.jump(). That's it. actionStates['jump'] can remain true
+    // until the key is released and a keyup event sets actionStates['jump'] = false.
+    // The key is that isActionJustPressed will only return true for that one frame transition.
+
+    // For movement actions ('moveLeft', 'moveRight') that are set by keyDown
+    // and cleared by keyUp, this simple copy is fine.
 }
 
 // Example of how you might update previous states for "just pressed" logic
